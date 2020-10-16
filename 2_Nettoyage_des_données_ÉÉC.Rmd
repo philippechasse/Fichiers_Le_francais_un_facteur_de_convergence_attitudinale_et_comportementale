@@ -1,0 +1,462 @@
+---
+title: "2 : Nettoyage des données de l'Étude électorale canadienne de 2019"
+author: "Philippe Chassé"
+date: "2 juillet 2020"
+output: pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Nettoyage de l'environnement R :
+rm(list = ls())
+```
+
+# 1. Téléchargement des prologiciels et des données :
+
+## a) Prologiciels :
+```{r}
+# Prologiciels nécessaires :
+pacman::p_load(haven, foreign, skimr, tidyverse, PROscorerTools, plyr, knitr, car, psy, FactoMineR, factoextra, stats, ggpubr)
+```
+
+## b) Données :
+```{r}
+# Étude électorale canadienne de 2019 (sondage Web) :
+EEC_2019_W1 <- read_dta("EEC_2019_W_FSA.dta")
+
+# Étude électorale canadienne de 2019 (sondage téléphonique) :
+EEC_2019_T1 <- read_dta("EEC_2019_T_FSA.dta")
+```
+
+# 2. Sélection des variables d'intérêt :
+
+## a) Étude électorale canadienne de 2019 (sondage Web) : 
+```{r}
+EEC_2019_W2 <- EEC_2019_W1 %>% 
+
+# Valeurs politiques :
+select(echelle_gauche_droite = pes19_lr_self_1, role_gouvernement_ecart = pes19_govt_act_ineq, role_femmes = pes19_womenhome, droits_personnes_homosexuelles = pes19_donegl, valeurs_familiales_traditionnelles = pes19_famvalues, environnement = cps19_spend_env,
+
+# Identité et comportements politiques : 
+confiance_gouvernement_provincial = pes19_conf_inst1_2, confiance_gouvernement_federal = pes19_conf_inst1_1, satisfaction_gouvernement_provincial = cps19_prov_gov_sat, satisfaction_gouvernement_federal = cps19_fed_gov_sat, avis_quebec = pes19_country_3, avis_canada = pes19_country_1, independance = cps19_quebec_sov, proche_provincial = cps19_prov_id, proche_federal = pes19_pid,
+
+# Participation politique :
+membre_parti = pes19_partymember, membre_parti_provincial = cps19_party_member_37, autre_1 = cps19_party_member_36, autre_2 = cps19_party_member_38, autre_3 = cps19_party_member_39, vote_2019_a = pes19_turnout2019, vote_2019_b = pes19_turnout2019_v2,  contact_elu = pes19_partic2_3, manifestation = pes19_partic1_2,  petition = pes19_partic3_6, boycottage = pes19_partic1_3, volontariat = cps19_volunteer, 
+
+# Langue :
+langue_maison = pes19_lang, langue_enfance_francais = cps19_language_69, langue_enfance_anglais = cps19_language_68, langue_sondage = cps19_Q_Language, 
+
+# Religion :
+religion = cps19_religion, importance_religion = cps19_rel_imp,
+  
+# Statut d'immigrant :
+statut_immigration = cps19_bornin_canada, annee_immigration = cps19_imm_year, deuxieme_generation = pes19_parents_born,
+  
+# Caractéristiques sociodémographiques :
+province = cps19_province, genre = cps19_gender, age = cps19_age, education = cps19_education, revenu_a = cps19_income_number, revenu_b = cps19_income_cat, agglomeration_montreal = cps19_fsa, 
+                
+# Autres :
+efficacite_interne = cps19_govt_confusing, efficacite_externe = cps19_govt_say)
+
+# Variables intéressantes :
+# role_gouvernement_emploi = pes19_privjobs, plus_quebec = pes19_doneqc, menace_francais = pes19_langQC, menace_culture = pes19_cultureQC, langue_si_independance = pes19_qclang, qualite_vie_si_independance = pes19_qcsol, interet_politique = cps19_interest_gen_1, satisfaction_democratie_canada = cps19_demsat, don_parti_federal = cps19_fed_donate, vote_2015 = cps19_turnout_2015, discussion_politique = pes19_partic1_1, candidat_reseaux_sociaux = pes19_partic2_1, volontariat_parti = pes19_partic2_2, don_parti = pes19_partic2_4, volontariat_organisation = pes19_partic3_1, charite = pes19_partic3_2, volontariat_organisation_autre = pes19_partic3_3, partage_information = pes19_partic3_4, medias_sociaux = pes19_partic3_5, niveau_immigration = cps19_imm, devoir_vote = cps19_duty_choice, avis_minorites_visibles = cps19_groups_therm_1, avis_immigrants = cps19_groups_therm_2, avis_francophones = cps19_groups_therm_3, avis_bilinguisme = pes19_bilingualism, pays_origine = cps19_bornin_other
+```
+
+## b) Étude électorale canadienne de 2019 (sondage téléphonique) :
+```{r}
+EEC_2019_T2 <- EEC_2019_T1 %>% 
+
+# Valeurs politiques :
+select(echelle_gauche_droite = p42, role_gouvernement_ecart = p20_d, role_femmes = p20_e, droits_personnes_homosexuelles = p35_c, environnement = q27_b,
+
+# Identité et comportements politiques : 
+satisfaction_gouvernement_provincial = q54, satisfaction_gouvernement_federal = q13, independance = q43, proche_federal = q52, 
+
+# Participation politique :
+vote_2019 = p2, membre_parti = p31, manifestation = p29_c, boycottage = p29_a, volontariat = q45, 
+
+# Langue :
+langue_maison_francais = p56_2, langue_maison_anglais = p56_1, langue_enfance_francais = q67, langue_sondage = language_CES, 
+
+# Religion :
+religion = q62, importance_religion = q63,
+  
+# Statut d'immigrant :
+statut_immigration = q64, annee_immigration = q65, deuxieme_generation = p55,
+  
+# Caractéristiques sociodémographiques :
+province = q4, genre = q3, age = age, education = q61, revenu = q70r, agglomeration_montreal = fsa) 
+
+# Création de variables factices :
+variables_factices = c("valeurs_familiales_traditionnelles", "environnement", "confiance_gouvernement_provincial", "confiance_gouvernement_federal", "confiance_provincial_federal", "avis_quebec", "avis_canada", "avis_quebec_canada", "proche_provincial", "proche_PLQ", "membre_parti_provincial", "autre_1", "autre_2", "autre_3", "vote_2019_a", "vote_2019_b", "contact_elu", "petition", "langue_maison", "langue_enfance_anglais", "revenu_a", "revenu_b", "efficacite_interne", "efficacite_externe") 
+EEC_2019_T2[variables_factices] <- NA
+
+# Variables intéressantes :
+# role_gouvernement_emploi = p20_a, langue_si_independance = p18, qualite_vie_si_independance = p19, vote_2015 = q59, volontariat_parti = p29_b, charite = p30
+```
+
+# 3. Recodage des variables :
+
+## a) Étude électorale canadienne de 2019 (sondage Web) :
+
+### i. Valeurs politiques :
+```{r}
+# Rôle gouvernement écart (1 = le gouvernement ne devrait pas prendre des mesures pour réduire les écarts entre les niveaux de revenus ; 5 = le gouvernement devrait prendre des mesures pour réduire les écarts entre les niveaux de revenus) :
+EEC_2019_W2$role_gouvernement_ecart <- recode(EEC_2019_W2$role_gouvernement_ecart, "6 = NA")
+
+# Rôle femmes (1 = moins de femmes à l'extérieur du foyer ; 5 = plus de femmes à l'extérieur du foyer) :
+EEC_2019_W2$role_femmes <- recode(EEC_2019_W2$role_femmes, "1 = 5; 2 = 4; 4 = 2; 5 = 1; 6 = NA")
+
+# Droits personnes homosexuelles (1 = beaucoup moins devrait être fait pour les gais et lesbiennes ; 5 = beaucoup plus devrait être fait pour les gais et lesbiennes) :
+EEC_2019_W2$droits_personnes_homosexuelles <- recode(EEC_2019_W2$droits_personnes_homosexuelles, "1 = 5; 2 = 4; 4 = 2; 5 = 1; 6 = NA")
+
+# Valeurs familiales traditionnelles (1 = moins de problèmes si on accordait de l'importance aux valeurs familiales traditionnelles ; 5 = plus de problèmes si on accordait de l'importance aux valeurs familiales traditionnelles) :
+EEC_2019_W2$valeurs_familiales_traditionnelles <- recode(EEC_2019_W2$valeurs_familiales_traditionnelles, "1 = 5; 2 = 4; 4 = 2; 5 = 1; 6 = NA")
+
+# Protection environnement (1 = considère que le gouvernement devrait investir moins pour l'environnement ; 3 = considère que le gouvernement devrait investir plus pour l'environnement) :
+EEC_2019_W2$environnement <- recode(EEC_2019_W2$environnement, "4 = NA")
+```
+
+### ii. Identité et comportements politiques :
+```{r}
+# Confiance (provincial) (1 = pas du tout confiant ; 4 = très confiant) :
+EEC_2019_W2$confiance_gouvernement_provincial <- recode(EEC_2019_W2$confiance_gouvernement_provincial, "1 = 4; 2 = 3; 3 = 2; 4 = 1; 5 = NA")
+
+# Confiance (fédéral) (1 = pas du tout confiant ; 4 = très confiant) :
+EEC_2019_W2$confiance_gouvernement_federal <- recode(EEC_2019_W2$confiance_gouvernement_federal, "1 = 4; 2 = 3; 3 = 2; 4 = 1; 5 = NA")
+
+# Confiance (provincial - fédéral) (-3 = plus confiant envers le gouvernement fédéral ; 3 = plus confiant envers le gouvernement provincial) :
+EEC_2019_W2$confiance_provincial_federal <- EEC_2019_W2$confiance_gouvernement_provincial - EEC_2019_W2$confiance_gouvernement_federal
+
+# Satisfaction (provincial) (1 = pas du tout satisfait ; 4 = très satisfait) :
+EEC_2019_W2$satisfaction_gouvernement_provincial <- recode(EEC_2019_W2$satisfaction_gouvernement_provincial, "1 = 4; 2 = 3; 3 = 2; 4 = 1; 5 = NA")
+
+# Satisfaction (fédéral) (1 = pas du tout satisfait ; 4 = très satisfait) :
+EEC_2019_W2$satisfaction_gouvernement_federal <- recode(EEC_2019_W2$satisfaction_gouvernement_federal, "1 = 4; 2 = 3; 3 = 2; 4 = 1; 5 = NA")
+
+# Satisfaction (provincial - fédéral) (-3 = plus satisfait du gouvernement fédéral ; 3 = plus satisfait du gouvernement provincial) :
+EEC_2019_W2$satisfaction_provincial_federal <- EEC_2019_W2$satisfaction_gouvernement_provincial - EEC_2019_W2$satisfaction_gouvernement_federal 
+
+# Avis (Québec - Canada) (-10 = aime beaucoup plus le Canada que le Québec ; 10 = aime beaucoup plus le Québec que le Canada) :
+EEC_2019_W2$avis_quebec_canada <- EEC_2019_W2$avis_quebec - EEC_2019_W2$avis_canada 
+EEC_2019_W2$avis_quebec_canada <- EEC_2019_W2$avis_quebec_canada/10
+
+# Appui indépendance (0 = contre ; 1 = pour) :
+EEC_2019_W2$independance <- recode(EEC_2019_W2$independance, "1 = 1; 2 = 1; 3 = 0; 4 = 0; 5 = NA")
+
+# Proche PLQ (0 = non, 1 = oui) :
+EEC_2019_W2$proche_provincial <- recode(EEC_2019_W2$proche_provincial, "296 = NA; 297 = NA")
+EEC_2019_W2$proche_PLQ <- if_else(EEC_2019_W2$proche_provincial == 281, 1, 0)
+
+# Proche PLC (0 = non ; 1 = oui) :
+EEC_2019_W2$proche_federal <- recode(EEC_2019_W2$proche_federal, "6 = NA")
+EEC_2019_W2$proche_PLC <- if_else(EEC_2019_W2$proche_federal == 1, 1, 0)
+```
+
+### iii. Participation politique :
+```{r}
+# Membre parti (0 = non ; 1 = oui) :
+EEC_2019_W2$membre_parti <- recode(EEC_2019_W2$membre_parti, "1 = 1; 2 = 0; 3 = NA")
+  
+# Membre parti provincial (0 = non ; 1 = oui) :
+#EEC_2019_W2$membre_parti_provincial <- recode(EEC_2019_W2$membre_parti_provincial, "36 = 0; 37 = 1; 38 = 0; 39 = 0; 40 = NA")
+EEC_2019_W2$autre_1 <- EEC_2019_W2$autre_1 - 1
+EEC_2019_W2$autre_2 <- EEC_2019_W2$autre_2 - 1
+EEC_2019_W2$autre_3 <- EEC_2019_W2$autre_3 - 1
+
+EEC_2019_W2$membre_parti_provincial <- ifelse(is.na(EEC_2019_W2$membre_parti_provincial), EEC_2019_W2$autre_1, EEC_2019_W2$membre_parti_provincial)
+
+EEC_2019_W2$membre_parti_provincial <- ifelse(is.na(EEC_2019_W2$membre_parti_provincial), EEC_2019_W2$autre_3, EEC_2019_W2$membre_parti_provincial)
+
+EEC_2019_W2$membre_parti_provincial <- ifelse(is.na(EEC_2019_W2$membre_parti_provincial), EEC_2019_W2$autre_3, EEC_2019_W2$membre_parti_provincial)
+
+# Vote (fédéral) (0 = non ; 1 = oui) :
+EEC_2019_W2$vote_2019_a <- recode(EEC_2019_W2$vote_2019_a, "1 = 1; 2 = 0; 3 = 0; 4 = NA; 5 = 0; 6 = 0; 8 = NA")
+EEC_2019_W2$vote_2019_b <- recode(EEC_2019_W2$vote_2019_b, "1 = 1; 2 = 0; 3 = 0; 4 = NA; 5 = 0; 6 = 0; 8 = NA")
+EEC_2019_W2$vote_2019 <- coalesce(EEC_2019_W2$vote_2019_a, EEC_2019_W2$vote_2019_b)
+
+# Contact élu (0 = non ; 1 = oui) :
+EEC_2019_W2$contact_elu <- recode(EEC_2019_W2$contact_elu, "1 = 0; 2 = 1; 3 = 1; 4 = 1; 5 = NA")
+
+# Manifestation (0 = non ; 1 = oui) :
+EEC_2019_W2$manifestation <- recode(EEC_2019_W2$manifestation, "1 = 0; 2 = 1; 3 = 1; 4 = 1; 5 = NA")
+
+# Pétition (0 = non ; 1 = oui) :
+EEC_2019_W2$petition <- recode(EEC_2019_W2$petition, "1 = 0; 2 = 1; 3 = 1; 4 = 1; 5 = NA")
+
+# Boycottage (0 = non ; 1 = oui) :
+EEC_2019_W2$boycottage <- recode(EEC_2019_W2$boycottage, "1 = 0; 2 = 1; 3 = 1; 4 = 1; 5 = NA")
+
+# Volontariat (0 = non ; 1 = oui) :
+EEC_2019_W2$volontariat <- recode(EEC_2019_W2$volontariat, "1 = 0; 2 = 1; 3 = 1; 4 = 1; 5 = NA")
+```
+
+### iv. Langue :
+```{r}
+# Langue maison français (0 = non ; 1 = oui) :
+EEC_2019_W2$langue_maison_francais <- if_else(EEC_2019_W2$langue_maison == 69, 1, 0)
+
+# Langue maison anglais (0 = non ; 1 = oui) :
+EEC_2019_W2$langue_maison_anglais <- if_else(EEC_2019_W2$langue_maison == 68, 1, 0)
+
+# Langue enfance français (0 = non ; 1 = oui) :
+EEC_2019_W2$langue_enfance_francais[is.na(EEC_2019_W2$langue_enfance_francais)] = 0
+
+# Langue enfance anglais (0 = non ; 1 = oui) :
+EEC_2019_W2$langue_enfance_anglais[is.na(EEC_2019_W2$langue_enfance_anglais)] = 0
+
+# Langue sondage français (0 = non ; 1 = oui) :
+EEC_2019_W2$langue_sondage_francais <- if_else(EEC_2019_W2$langue_sondage == "FR-CA", 1, 0)
+
+# Langue sondage anglais (0 = non ; 1 = oui) :
+EEC_2019_W2$langue_sondage_anglais <- if_else(EEC_2019_W2$langue_sondage == "EN", 1, 0)
+```
+
+### v. Religion :
+```{r}
+# Athéisme (0 = non ; 1 = oui) :
+EEC_2019_W2$atheisme <- if_else(EEC_2019_W2$religion == 1, 1, 0)
+
+# Islam (0 = non ; 1 = oui) :
+EEC_2019_W2$islam <- if_else(EEC_2019_W2$religion == 6, 1, 0)
+
+# Importance religion (1 = pas important ; 4 = très important) :
+EEC_2019_W2$importance_religion <- recode(EEC_2019_W2$importance_religion, "1 = 4; 2 = 3; 3 = 2; 4 = 1; 5 = NA")
+EEC_2019_W2$importance_religion[is.na(EEC_2019_W2$importance_religion) & EEC_2019_W2$religion == 1] <- 1
+```
+
+### vi. Statut d'immigrant :
+```{r}
+# Immigrant première génération (0 = non ; 1 = oui) :
+EEC_2019_W2$immigrant_premiere_generation <- if_else(EEC_2019_W2$statut_immigration == 2, 1, 0)
+
+# Immigrant deuxième génération (0 = non ; 1 = oui) :
+EEC_2019_W2$immigrant_deuxieme_generation <- if_else((EEC_2019_W2$deuxieme_generation == 4) & (EEC_2019_W2$statut_immigration == 1), 1, 0)
+
+# Immigrant (0 = non ; 1 = oui) :
+EEC_2019_W2$immigrant <- if_else((EEC_2019_W2$immigrant_premiere_generation == 1) | (EEC_2019_W2$immigrant_deuxieme_generation == 1), 1, 0)
+
+# Années Canada (pourcentage) :
+EEC_2019_W2$annee_immigration <- recode(EEC_2019_W2$annee_immigration, "406 = NA")
+EEC_2019_W2$annees_canada <- 405 - EEC_2019_W2$annee_immigration
+EEC_2019_W2$annees_canada <- ifelse(is.na(EEC_2019_W2$annees_canada), EEC_2019_W2$age, EEC_2019_W2$annees_canada)
+EEC_2019_W2$annees_canada <- (EEC_2019_W2$annees_canada/EEC_2019_W2$age)*100
+```
+
+### vii. Caractéristiques sociodémographiques :
+```{r}
+# Québec (0 = non ; 1 = oui) :
+EEC_2019_W2$quebec <- if_else(EEC_2019_W2$province == 24, 1, 0)
+
+# Femme (0 = non ; 1 = oui) :
+EEC_2019_W2$femme <- if_else(EEC_2019_W2$genre == 2, 1, 0)
+
+# Université (0 = non ; 1 = oui) :
+EEC_2019_W2$education <- recode(EEC_2019_W2$education, "12 = NA") 
+EEC_2019_W2$universite <- if_else(EEC_2019_W2$education >= 8, 1, 0)
+
+# Revenu (1 = aucun revenu ; 2 = 1 000$ à 30 000$ ; 3 = 30 001 $ à 60 000$ ; 4 = 60 001 $ à 90 000 $ ; 5 = 90 001 $ à 110 000$ ; 6 = 110 001$ à 150 000$ ; 7 = 150 001$ à 200 000$ ; 8 = 200 000$ et plus) :
+EEC_2019_W2$revenu_a <- recode(EEC_2019_W2$revenu_a, "0 = 1; 1000:30000 = 2; 30001:60000 = 3; 60001:90000 = 4; 90001:110000 = 5; 110001:150000 = 6; 150001:200000 = 7; 200000:99999999 = 8")
+EEC_2019_W2$revenu_b <- is.numeric(EEC_2019_W2$revenu_b)
+EEC_2019_W2$revenu_b <- recode(EEC_2019_W2$revenu_b, "9 = NA")
+EEC_2019_W2$revenu <- coalesce(EEC_2019_W2$revenu_a, EEC_2019_W2$revenu_b)
+
+# Agglomération Montréal (0 = non ; 1 = oui) :
+EEC_2019_W2$agglomeration_montreal <- ifelse(grepl("^H", EEC_2019_W2$agglomeration_montreal), 1, 0)
+```
+
+### viii. Autres :
+```{r}
+# Efficacité interne (1 = peu d'efficacité interne ; 4 = beaucoup d'efficacité interne) :
+EEC_2019_W2$efficacite_interne <- recode(EEC_2019_W2$efficacite_interne, "1 = 4; 2 = 3; 3 = 2; 4 = 1; 5 = NA")
+
+# Efficacité externe (1 = peu d'efficacité externe ; 4 = beaucoup d'efficacité externe) :
+EEC_2019_W2$efficacite_externe <- recode(EEC_2019_W2$efficacite_externe, "1 = 4; 2 = 3; 3 = 2; 4 = 1; 5 = NA")
+```
+
+### ix. Type de sondage :
+```{r}
+# Sondage (0 = Web ; 1 = téléphonique) :
+EEC_2019_W2$sondage <- 0
+```
+
+## b) Étude électorale canadienne de 2019 (sondage téléphonique) :
+
+### i. Valeurs politiques :
+```{r}
+# Échelle gauche-droite (0 = gauche ; 10 = droite) :
+EEC_2019_T2$echelle_gauche_droite <- recode(EEC_2019_T2$echelle_gauche_droite, "-8 = NA; -9 = NA; 11 = NA; 12 = NA; 13 = NA")
+
+# Rôle gouvernement écart (1 = le gouvernement ne devrait pas prendre des mesures pour réduire les écarts entre les niveaux de revenus ; 5 = le gouvernement devrait prendre des mesures pour réduire les écarts entre les niveaux de revenus) :
+EEC_2019_T2$role_gouvernement_ecart <- recode(EEC_2019_T2$role_gouvernement_ecart, "1 = 5; 2 = 4; 4 = 2; 5 = 1; -8 = NA; -9 = NA")
+
+# Role femmes (1 = moins de femmes à l'extérieur du foyer ; 5 = plus de femmes à l'extérieur du foyer) :
+EEC_2019_T2$role_femmes <- recode(EEC_2019_T2$role_femmes, "-8 = NA; -9 = NA")
+
+# Droits personnes homosexuelles (1 = beaucoup moins devrait être fait pour les gais et lesbiennes ; 5 = beaucoup plus devrait être fait pour les gais et lesbiennes) :
+EEC_2019_T2$droits_personnes_homosexuelles <- recode(EEC_2019_T2$droits_personnes_homosexuelles, "1 = 5; 2 = 4; 4 = 2; 5 = 1; -8 = NA; -9 = NA")
+
+# Protection environnement (1 = considère que le gouvernement devrait investir moins pour l'environnement ; 3 = considère que le gouvernement devrait investir plus pour l'environnement) :
+EEC_2019_T2$environnement <- recode(EEC_2019_T2$environnement, "1 = 3; 2 = 1; 3 = 2; -8 = NA; -9 = NA")
+```
+
+### ii. Identité et comportements politiques :
+```{r}
+# Satisfaction (provincial) (1 = pas du tout satisfait ; 4 = très satisfait) :
+EEC_2019_T2$satisfaction_gouvernement_provincial <- recode(EEC_2019_T2$satisfaction_gouvernement_provincial, "1 = 4; 2 = 3; 3 = 2; 4 = 1; -8 = NA; -9 = NA")
+
+# Satisfaction (fédéral) (1 = pas du tout satisfait ; 4 = très satisfait) :
+EEC_2019_T2$satisfaction_gouvernement_federal <- recode(EEC_2019_T2$satisfaction_gouvernement_federal, "1 = 4; 2 = 3; 3 = 2; 4 = 1; -8 = NA; -9 = NA")
+
+# Satisfaction (provincial - fédéral) (-3 = plus satisfait du gouvernement fédéral ; 3 = plus satisfait du gouvernement provincial) :
+EEC_2019_T2$satisfaction_provincial_federal <- EEC_2019_T2$satisfaction_gouvernement_provincial - EEC_2019_T2$satisfaction_gouvernement_federal 
+
+# Appui indépendance (0 = contre ; 1 = pour) :
+EEC_2019_T2$independance <- recode(EEC_2019_T2$independance, "1 = 1; 2 = 1; 3 = 0; 4 = 0; -8 = NA; -9 = NA")
+
+# Proche PLC (0 = non ; 1 = oui) :
+EEC_2019_T2$proche_federal <- recode(EEC_2019_T2$proche_federal, "-8 = NA; -9 = NA")
+EEC_2019_T2$proche_PLC <- if_else(EEC_2019_T2$proche_federal == 1, 1, 0)
+```
+
+### iii. Participation politique :
+```{r}
+# Vote (fédéral) (0 = non ; 1 = oui) :
+EEC_2019_T2$vote_2019 <- recode(EEC_2019_T2$vote_2019, "1 = 1; 2 = 0; 3 = 0; 4 = NA; 5 = 0; 6 = 0; -8 = NA; -9 = NA")
+
+# Membre parti (0 = non ; 1 = oui) :
+EEC_2019_T2$membre_parti <- recode(EEC_2019_T2$membre_parti, "1 = 1; 2 = 0; -8 = NA; -9 = NA")
+
+# Manifestation (0 = non ; 1 = oui) :
+EEC_2019_T2$manifestation <- recode(EEC_2019_T2$manifestation, "1 = 0; 2 = 1; 3 = 1; 4 = 1; -8 = NA; -9 = NA")
+
+# Boycottage (0 = non ; 1 = oui) :
+EEC_2019_T2$boycottage <- recode(EEC_2019_T2$boycottage, "1 = 0; 2 = 1; 3 = 1; 4 = 1; -8 = NA; -9 = NA")
+
+# Volontariat (0 = non ; 1 = oui) :
+EEC_2019_T2$volontariat <- recode(EEC_2019_T2$volontariat, "1 = 1; 2 = 0; -8 = NA; -9 = NA")
+```
+
+### iv. Langue :
+```{r}
+# Langue maison français (0 = non ; 1 = oui) :
+EEC_2019_T2$langue_maison_francais <- recode(EEC_2019_T2$langue_maison_francais, "-8 = NA; -9 = NA")
+
+# Langue maison anglais (0 = non ; 1 = oui) :
+EEC_2019_T2$langue_maison_anglais <- recode(EEC_2019_T2$langue_maison_anglais, "-8 = NA; -9 = NA")
+
+# Langue enfance français (0 = non ; 1 = oui) :
+EEC_2019_T2$langue_enfance_francais <- recode(EEC_2019_T2$langue_enfance_francais, "-8 = NA; -9 = NA") 
+EEC_2019_T2$langue_enfance_francais <- if_else(EEC_2019_T2$langue_enfance_francais == 4, 1, 0)
+
+# Langue enfance anglais (0 = non ; 1 = oui) :
+EEC_2019_T2$langue_enfance_anglais <- if_else(EEC_2019_T2$langue_enfance_francais == 1, 1, 0)
+
+# Langue sondage français (0 = non ; 1 = oui) :
+EEC_2019_T2$langue_sondage_francais <- if_else(EEC_2019_T2$langue_sondage == 2, 1, 0)
+
+# Langue sondage anglais (0 = non ; 1 = oui) :
+EEC_2019_T2$langue_sondage_anglais <- if_else(EEC_2019_T2$langue_sondage == 1, 1, 0)
+```
+
+### v. Religion :
+```{r}
+# Athéisme (0 = non ; 1 = oui) :
+EEC_2019_T2$atheisme <- if_else(EEC_2019_T2$religion == 21, 1, 0)
+
+# Islam (0 = non ; 1 = oui) :
+EEC_2019_T2$religion <- recode(EEC_2019_T2$religion, "-8 = NA; -9 = NA")
+EEC_2019_T2$islam <- if_else(EEC_2019_T2$religion == 2, 1, 0)
+
+# Importance religion (0 = pas religieux ; 1 = pas important ; 4 = très important) :
+EEC_2019_T2$importance_religion <- recode(EEC_2019_T2$importance_religion, "1 = 4; 2 = 3; 3 = 2; 4 = 1; -8 = NA; -9 = NA")
+EEC_2019_T2$importance_religion[is.na(EEC_2019_T2$importance_religion) & EEC_2019_T2$religion == 21] <- 1
+```
+
+### vi. Statut d'immigrant :
+```{r}
+# Immigrant première génération (0 = non ; 1 = oui) :
+EEC_2019_T2$statut_immigration <- recode(EEC_2019_T2$statut_immigration, "-8 = NA; -9 = NA")
+EEC_2019_T2$immigrant_premiere_generation <- if_else((EEC_2019_T2$statut_immigration == 1) | (EEC_2019_T2$statut_immigration == 2), 0, 1)
+
+# Immigrant deuxième génération (0 = non ; 1 = oui) :
+EEC_2019_T2$deuxieme_generation <- recode(EEC_2019_T2$deuxieme_generation, "-8 = NA; -9 = NA")
+EEC_2019_T2$immigrant_deuxieme_generation <- if_else((EEC_2019_T2$deuxieme_generation == 1) & (EEC_2019_T2$immigrant_premiere_generation == 0), 1, 0)
+
+# Immigrant (0 = non ; 1 = oui) :
+EEC_2019_T2$immigrant <- if_else((EEC_2019_T2$immigrant_premiere_generation == 1) | (EEC_2019_T2$immigrant_deuxieme_generation == 1), 1, 0)
+
+# Années Canada (pourcentage) :
+EEC_2019_T2$annee_immigration <- recode(EEC_2019_T2$annee_immigration, "-8 = NA; -9 = NA")
+EEC_2019_T2$annees_canada <- 2019 - EEC_2019_T2$annee_immigration
+EEC_2019_T2$annees_canada <- ifelse(is.na(EEC_2019_T2$annees_canada), EEC_2019_T2$age, EEC_2019_T2$annees_canada)
+EEC_2019_T2$annees_canada <- (EEC_2019_T2$annees_canada/EEC_2019_T2$age)*100
+```
+
+### vii. Caractéristiques sociodémographiques :
+```{r}
+# Québec (0 = non ; 1 = oui) :
+EEC_2019_T2$province <- recode(EEC_2019_T2$province, "-8 = NA; -9 = NA")
+EEC_2019_T2$quebec <- if_else(EEC_2019_T2$province == 5, 1, 0)
+
+# Femme (0 = non ; 1 = oui) :
+EEC_2019_T2$genre <- recode(EEC_2019_T2$genre, "-8 = NA; -9 = NA")
+EEC_2019_T2$femme <- if_else(EEC_2019_T2$genre == 2, 1, 0)
+
+# Université (0 = non ; 1 = oui) :
+EEC_2019_T2$education <- recode(EEC_2019_T2$education, "-8 = NA; -9 = NA") 
+EEC_2019_T2$universite <- if_else(EEC_2019_T2$education >= 8, 1, 0)
+
+# Revenu (1 = aucun revenu ; 2 = 1 000$ à 30 000$ ; 3 = 30 001 $ à 60 000$ ; 4 = 60 001 $ à 90 000 $ ; 5 = 90 001 $ à 110 000$ ; 6 = 110 001$ à 150 000$ ; 7 = 150 001$ à 200 000$ ; 8 = 200 000$ et plus) :
+EEC_2019_T2$revenu <- recode(EEC_2019_T2$revenu, "-8 = NA; -9 = NA")
+
+# Agglomération Montréal (0 = non ; 1 = oui) :
+EEC_2019_T2$agglomeration_montreal <- ifelse(grepl("^H", EEC_2019_T2$agglomeration_montreal), 1, 0)
+```
+
+### viii. Type de sondage :
+```{r}
+# Sondage (0 = Web ; 1 = téléphonique) :
+EEC_2019_T2$sondage <- 1
+```
+
+## c) Jumelage du sondage Web et du sondage téléphonique :
+```{r}
+EEC_2019 <- rbind(EEC_2019_W2, EEC_2019_T2)
+```
+
+# 4. Création des sous-ensembles et sauvegarde des données transformées :
+
+## a) Québécois :
+```{r}
+EEC_2019_Q <- subset(EEC_2019, quebec == 1) 
+save(EEC_2019_Q, file = "EEC_2019_Q.RData")
+```
+
+## b) Néo-Québécois :
+```{r}
+EEC_2019_QI <- subset(EEC_2019_Q, immigrant == 1 & annees_canada <= 100 & (!is.na(langue_maison_francais))) 
+save(EEC_2019_QI, file = "EEC_2019_QI.RData") 
+
+# Première génération seulement :
+EEC_2019_QI1 <- subset(EEC_2019_QI, immigrant_premiere_generation == 1 & (!is.na(langue_maison_francais)))
+save(EEC_2019_QI1, file = "EEC_2019_QI1.RData")
+
+# Deuxième génération seulement :
+EEC_2019_QI2 <- subset(EEC_2019_QI, immigrant_deuxieme_generation == 1 & (!is.na(langue_maison_francais)))
+save(EEC_2019_QI2, file = "EEC_2019_QI2.RData")
+```
+
+## c) Québécois francophones qui ne sont pas issus de l'immigration :
+```{r}
+EEC_2019_QF <- subset(EEC_2019_Q, langue_sondage_francais == 1 & immigrant == 0) 
+save(EEC_2019_QF, file = "EEC_2019_QF.RData")
+```
+
+## d) Québécois anglophones qui ne sont pas issus de l'immigration :
+```{r}
+EEC_2019_QA <- subset(EEC_2019_Q, langue_sondage_anglais == 1 & immigrant == 0) 
+save(EEC_2019_QA, file = "EEC_2019_QA.RData")
+```
+

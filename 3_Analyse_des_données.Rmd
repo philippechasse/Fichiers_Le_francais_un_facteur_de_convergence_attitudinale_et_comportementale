@@ -1,0 +1,1219 @@
+---
+title: "3 : Analyse des données"
+author: "Philippe Chassé"
+date: "2 juillet 2020"
+output: pdf_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Nettoyage de l'environnement R :
+rm(list = ls())
+```
+
+# 1. Téléchargement des prologiciels et des données :
+
+## a) Prologiciels :
+```{r}
+# Prologiciels nécessaires :
+pacman::p_load(tidyverse, VIM, margins, texreg, skimr, extrafont, data.table, dplyr, PROscorerTools, readxl, gridExtra, ggpubr, corrplot, broom, ggsci, stargazer, ggthemes, car, ggplot2, ggtools)
+```
+
+## b) Données :
+
+### i. Données (Projet sur la diversité provinciale de 2014) :
+```{r}
+# Québécois :
+load("PDP_2014_Q.RData")
+
+# Québécois qui sont issus d'une minorité visible :
+load("PDP_2014_QI.RData")
+
+# Première génération seulement :
+load("PDP_2014_QI1.RData")
+
+# Deuxième génération seulement :
+load("PDP_2014_QI2.RData")
+
+# Québécois francophones qui ne sont pas issus d'une minorité visible :
+load("PDP_2014_QF.RData")
+
+# Québécois anglophones qui ne sont pas issus d'une minorité visible :
+load("PDP_2014_QA.RData")
+```
+
+## ii. Données (Étude électorale canadienne de 2019) :
+```{r}
+# Québécois :
+load("EEC_2019_Q.RData")
+
+# Néo-Québécois :
+load("EEC_2019_QI.RData")
+
+# Première génération seulement :
+load("EEC_2019_QI1.RData")
+
+# Deuxième génération seulement :
+load("EEC_2019_QI2.RData")
+
+# Québécois francophones qui ne sont pas issus de l'immigration :
+load("EEC_2019_QF.RData")
+
+# Québécois anglophones qui ne sont pas issus de l'immigration :
+load("EEC_2019_QA.RData")
+```
+
+# 2. Moyennes par groupe de citoyens :
+
+## a) Projet sur la diversité provinciale de 2014 :
+
+### i. Valeurs politiques :
+```{r}
+# Rôle gouvernement vie :
+mean(PDP_2014_QF$role_gouvernement_vie, na.rm = TRUE)
+mean(PDP_2014_QA$role_gouvernement_vie, na.rm = TRUE)
+mean(PDP_2014_QI1$role_gouvernement_vie, na.rm = TRUE)
+mean(PDP_2014_QI2$role_gouvernement_vie, na.rm = TRUE)
+
+t.test(PDP_2014_QF$role_gouvernement_vie, PDP_2014_QA$role_gouvernement_vie)
+t.test(PDP_2014_QF$role_gouvernement_vie, PDP_2014_QI1$role_gouvernement_vie)
+t.test(PDP_2014_QF$role_gouvernement_vie, PDP_2014_QI2$role_gouvernement_vie)
+```
+
+```{r}
+# Programmes sociaux :
+mean(PDP_2014_QF$programmes_sociaux, na.rm = TRUE)
+mean(PDP_2014_QA$programmes_sociaux, na.rm = TRUE)
+mean(PDP_2014_QI1$programmes_sociaux, na.rm = TRUE)
+mean(PDP_2014_QI2$programmes_sociaux, na.rm = TRUE)
+
+t.test(PDP_2014_QF$programmes_sociaux, PDP_2014_QA$programmes_sociaux)
+t.test(PDP_2014_QF$programmes_sociaux, PDP_2014_QI1$programmes_sociaux)
+t.test(PDP_2014_QF$programmes_sociaux, PDP_2014_QI2$programmes_sociaux)
+```
+
+```{r}
+# Rôle femmes :
+mean(PDP_2014_QF$role_femmes, na.rm = TRUE)
+mean(PDP_2014_QA$role_femmes, na.rm = TRUE)
+mean(PDP_2014_QI1$role_femmes, na.rm = TRUE)
+mean(PDP_2014_QI2$role_femmes, na.rm = TRUE)
+
+t.test(PDP_2014_QF$role_femmes, PDP_2014_QA$role_femmes)
+t.test(PDP_2014_QF$role_femmes, PDP_2014_QI1$role_femmes)
+t.test(PDP_2014_QF$role_femmes, PDP_2014_QI2$role_femmes)
+```
+
+```{r}
+# Mariage homosexuel :
+mean(PDP_2014_QF$mariage_personnes_homosexuelles, na.rm = TRUE)
+mean(PDP_2014_QA$mariage_personnes_homosexuelles, na.rm = TRUE)
+mean(PDP_2014_QI1$mariage_personnes_homosexuelles, na.rm = TRUE)
+mean(PDP_2014_QI2$mariage_personnes_homosexuelles, na.rm = TRUE)
+
+t.test(PDP_2014_QF$mariage_personnes_homosexuelles, PDP_2014_QA$mariage_personnes_homosexuelles)
+t.test(PDP_2014_QF$mariage_personnes_homosexuelles, PDP_2014_QI1$mariage_personnes_homosexuelles)
+t.test(PDP_2014_QF$mariage_personnes_homosexuelles, PDP_2014_QI2$mariage_personnes_homosexuelles)
+```
+
+```{r}
+# Droit avortement :
+mean(PDP_2014_QF$droit_avortement, na.rm = TRUE)
+mean(PDP_2014_QA$droit_avortement, na.rm = TRUE)
+mean(PDP_2014_QI1$droit_avortement, na.rm = TRUE)
+mean(PDP_2014_QI2$droit_avortement, na.rm = TRUE)
+
+t.test(PDP_2014_QF$droit_avortement, PDP_2014_QA$droit_avortement)
+t.test(PDP_2014_QF$droit_avortement, PDP_2014_QI1$droit_avortement)
+t.test(PDP_2014_QF$droit_avortement, PDP_2014_QI2$droit_avortement)
+```
+
+```{r}
+# Protection environnement :
+mean(PDP_2014_QF$environnement, na.rm = TRUE)
+mean(PDP_2014_QA$environnement, na.rm = TRUE)
+mean(PDP_2014_QI1$environnement, na.rm = TRUE)
+mean(PDP_2014_QI2$environnement, na.rm = TRUE)
+
+t.test(PDP_2014_QF$environnement, PDP_2014_QA$environnement)
+t.test(PDP_2014_QF$environnement, PDP_2014_QI1$environnement)
+t.test(PDP_2014_QF$environnement, PDP_2014_QI2$environnement)
+```
+
+### ii. Identité et comportements politiques :
+```{r}
+# Confiance (provincial - fédéral) :
+mean(PDP_2014_QF$confiance_provincial_federal, na.rm = TRUE)
+mean(PDP_2014_QA$confiance_provincial_federal, na.rm = TRUE)
+mean(PDP_2014_QI1$confiance_provincial_federal, na.rm = TRUE)
+mean(PDP_2014_QI2$confiance_provincial_federal, na.rm = TRUE)
+
+t.test(PDP_2014_QF$confiance_provincial_federal, PDP_2014_QA$confiance_provincial_federal)
+t.test(PDP_2014_QF$confiance_provincial_federal, PDP_2014_QI1$confiance_provincial_federal)
+t.test(PDP_2014_QF$confiance_provincial_federal, PDP_2014_QI2$confiance_provincial_federal)
+```
+
+```{r}
+# Attachement (Québec - Canada) :
+mean(PDP_2014_QF$attachement_quebec_canada, na.rm = TRUE)
+mean(PDP_2014_QA$attachement_quebec_canada, na.rm = TRUE)
+mean(PDP_2014_QI1$attachement_quebec_canada, na.rm = TRUE)
+mean(PDP_2014_QI2$attachement_quebec_canada, na.rm = TRUE)
+
+t.test(PDP_2014_QF$attachement_quebec_canada, PDP_2014_QA$attachement_quebec_canada)
+t.test(PDP_2014_QF$attachement_quebec_canada, PDP_2014_QI1$attachement_quebec_canada)
+t.test(PDP_2014_QF$attachement_quebec_canada, PDP_2014_QI1$attachement_quebec_canada)
+```
+
+```{r}
+# Identité (Québec) :
+mean(PDP_2014_QF$identite, na.rm = TRUE)
+mean(PDP_2014_QA$identite, na.rm = TRUE)
+mean(PDP_2014_QI1$identite, na.rm = TRUE)
+mean(PDP_2014_QI2$identite, na.rm = TRUE)
+
+t.test(PDP_2014_QF$identite, PDP_2014_QA$identite)
+t.test(PDP_2014_QF$identite, PDP_2014_QI1$identite)
+t.test(PDP_2014_QF$identite, PDP_2014_QI2$identite)
+```
+
+```{r}
+# Appui indépendance :
+mean(PDP_2014_QF$independance, na.rm = TRUE)
+mean(PDP_2014_QA$independance, na.rm = TRUE)
+mean(PDP_2014_QI1$independance, na.rm = TRUE)
+mean(PDP_2014_QI2$independance, na.rm = TRUE)
+
+t.test(PDP_2014_QF$independance, PDP_2014_QA$independance)
+t.test(PDP_2014_QF$independance, PDP_2014_QI1$independance)
+t.test(PDP_2014_QF$independance, PDP_2014_QI2$independance)
+```
+
+```{r}
+# Proche PLQ :
+mean(PDP_2014_QF$proche_PLQ, na.rm = TRUE)
+mean(PDP_2014_QA$proche_PLQ, na.rm = TRUE)
+mean(PDP_2014_QI1$proche_PLQ, na.rm = TRUE)
+mean(PDP_2014_QI2$proche_PLQ, na.rm = TRUE)
+
+t.test(PDP_2014_QF$proche_PLQ, PDP_2014_QA$proche_PLQ)
+t.test(PDP_2014_QF$proche_PLQ, PDP_2014_QI1$proche_PLQ)
+t.test(PDP_2014_QF$proche_PLQ, PDP_2014_QI2$proche_PLQ)
+```
+
+```{r}
+# Proche PLC :
+mean(PDP_2014_QF$proche_PLC, na.rm = TRUE)
+mean(PDP_2014_QA$proche_PLC, na.rm = TRUE)
+mean(PDP_2014_QI1$proche_PLC, na.rm = TRUE)
+mean(PDP_2014_QI2$proche_PLC, na.rm = TRUE)
+
+t.test(PDP_2014_QF$proche_PLC, PDP_2014_QA$proche_PLC)
+t.test(PDP_2014_QF$proche_PLC, PDP_2014_QI1$proche_PLC)
+t.test(PDP_2014_QF$proche_PLC, PDP_2014_QI2$proche_PLC)
+```
+
+### iii. Participation politique :
+```{r}
+# Vote (provincial) :
+mean(PDP_2014_QF$vote_provincial, na.rm = TRUE)
+mean(PDP_2014_QA$vote_provincial, na.rm = TRUE)
+mean(PDP_2014_QI1$vote_provincial, na.rm = TRUE)
+mean(PDP_2014_QI2$vote_provincial, na.rm = TRUE)
+
+t.test(PDP_2014_QF$vote_provincial, PDP_2014_QA$vote_provincial)
+t.test(PDP_2014_QF$vote_provincial, PDP_2014_QI1$vote_provincial)
+t.test(PDP_2014_QF$vote_provincial, PDP_2014_QI2$vote_provincial)
+```
+
+```{r}
+# Vote (fédéral) :
+mean(PDP_2014_QF$vote_federal, na.rm = TRUE)
+mean(PDP_2014_QA$vote_federal, na.rm = TRUE)
+mean(PDP_2014_QI1$vote_federal, na.rm = TRUE)
+mean(PDP_2014_QI2$vote_federal, na.rm = TRUE)
+
+t.test(PDP_2014_QF$vote_federal, PDP_2014_QA$vote_federal)
+t.test(PDP_2014_QF$vote_federal, PDP_2014_QI1$vote_federal)
+t.test(PDP_2014_QF$vote_federal, PDP_2014_QI2$vote_federal)
+```
+
+```{r}
+# Contact élu :
+mean(PDP_2014_QF$contact_elu, na.rm = TRUE)
+mean(PDP_2014_QA$contact_elu, na.rm = TRUE)
+mean(PDP_2014_QI1$contact_elu, na.rm = TRUE)
+mean(PDP_2014_QI2$contact_elu, na.rm = TRUE)
+
+t.test(PDP_2014_QF$contact_elu, PDP_2014_QA$contact_elu)
+t.test(PDP_2014_QF$contact_elu, PDP_2014_QI1$contact_elu)
+t.test(PDP_2014_QF$contact_elu, PDP_2014_QI2$contact_elu)
+```
+
+```{r}
+# Manifestation :
+mean(PDP_2014_QF$manifestation, na.rm = TRUE)
+mean(PDP_2014_QA$manifestation, na.rm = TRUE)
+mean(PDP_2014_QI1$manifestation, na.rm = TRUE)
+mean(PDP_2014_QI2$manifestation, na.rm = TRUE)
+
+t.test(PDP_2014_QF$manifestation, PDP_2014_QA$manifestation)
+t.test(PDP_2014_QF$manifestation, PDP_2014_QI1$manifestation)
+t.test(PDP_2014_QF$manifestation, PDP_2014_QI2$manifestation)
+```
+
+```{r}
+# Pétition :
+mean(PDP_2014_QF$petition, na.rm = TRUE)
+mean(PDP_2014_QA$petition, na.rm = TRUE)
+mean(PDP_2014_QI1$petition, na.rm = TRUE)
+mean(PDP_2014_QI2$petition, na.rm = TRUE)
+
+t.test(PDP_2014_QF$petition, PDP_2014_QA$petition)
+t.test(PDP_2014_QF$petition, PDP_2014_QI1$petition)
+t.test(PDP_2014_QF$petition, PDP_2014_QI2$petition)
+```
+
+```{r}
+# Boycottage :
+mean(PDP_2014_QF$boycottage, na.rm = TRUE)
+mean(PDP_2014_QA$boycottage, na.rm = TRUE)
+mean(PDP_2014_QI1$boycottage, na.rm = TRUE)
+mean(PDP_2014_QI2$boycottage, na.rm = TRUE)
+
+t.test(PDP_2014_QF$boycottage, PDP_2014_QA$boycottage)
+t.test(PDP_2014_QF$boycottage, PDP_2014_QI1$boycottage)
+t.test(PDP_2014_QF$boycottage, PDP_2014_QI2$boycottage)
+```
+
+## b) Étude électorale canadienne de 2019 :
+
+### i. Valeurs politiques :
+```{r}
+# Échelle gauche-droite :
+mean(EEC_2019_QF$echelle_gauche_droite, na.rm = TRUE)
+mean(EEC_2019_QA$echelle_gauche_droite, na.rm = TRUE)
+mean(EEC_2019_QI1$echelle_gauche_droite, na.rm = TRUE)
+mean(EEC_2019_QI2$echelle_gauche_droite, na.rm = TRUE)
+
+t.test(EEC_2019_QF$echelle_gauche_droite, EEC_2019_QA$echelle_gauche_droite)
+t.test(EEC_2019_QF$echelle_gauche_droite, EEC_2019_QI1$echelle_gauche_droite)
+t.test(EEC_2019_QF$echelle_gauche_droite, EEC_2019_QI2$echelle_gauche_droite)
+```
+
+```{r}
+# Rôle gouvernement écart :
+mean(EEC_2019_QF$role_gouvernement_ecart, na.rm = TRUE)
+mean(EEC_2019_QA$role_gouvernement_ecart, na.rm = TRUE)
+mean(EEC_2019_QI1$role_gouvernement_ecart, na.rm = TRUE)
+mean(EEC_2019_QI2$role_gouvernement_ecart, na.rm = TRUE)
+
+t.test(EEC_2019_QF$role_gouvernement_ecart, EEC_2019_QA$role_gouvernement_ecart)
+t.test(EEC_2019_QF$role_gouvernement_ecart, EEC_2019_QI1$role_gouvernement_ecart)
+t.test(EEC_2019_QF$role_gouvernement_ecart, EEC_2019_QI2$role_gouvernement_ecart)
+```
+
+```{r}
+# Rôle femmes :
+mean(EEC_2019_QF$role_femmes, na.rm = TRUE)
+mean(EEC_2019_QA$role_femmes, na.rm = TRUE)
+mean(EEC_2019_QI1$role_femmes, na.rm = TRUE)
+mean(EEC_2019_QI2$role_femmes, na.rm = TRUE)
+
+t.test(EEC_2019_QF$role_femmes, EEC_2019_QA$role_femmes)
+t.test(EEC_2019_QF$role_femmes, EEC_2019_QI1$role_femmes)
+t.test(EEC_2019_QF$role_femmes, EEC_2019_QI2$role_femmes)
+```
+
+```{r}
+# Droits personnes homosexuelles :
+mean(EEC_2019_QF$droits_personnes_homosexuelles, na.rm = TRUE)
+mean(EEC_2019_QA$droits_personnes_homosexuelles, na.rm = TRUE)
+mean(EEC_2019_QI1$droits_personnes_homosexuelles, na.rm = TRUE)
+mean(EEC_2019_QI2$droits_personnes_homosexuelles, na.rm = TRUE)
+
+t.test(EEC_2019_QF$droits_personnes_homosexuelles, EEC_2019_QA$droits_personnes_homosexuelles)
+t.test(EEC_2019_QF$droits_personnes_homosexuelles, EEC_2019_QI1$droits_personnes_homosexuelles)
+t.test(EEC_2019_QF$droits_personnes_homosexuelles, EEC_2019_QI2$droits_personnes_homosexuelles)
+```
+
+```{r}
+# Valeurs familiales traditionnelles :
+mean(EEC_2019_QF$valeurs_familiales_traditionnelles, na.rm = TRUE)
+mean(EEC_2019_QA$valeurs_familiales_traditionnelles, na.rm = TRUE)
+mean(EEC_2019_QI1$valeurs_familiales_traditionnelles, na.rm = TRUE)
+mean(EEC_2019_QI2$valeurs_familiales_traditionnelles, na.rm = TRUE)
+
+t.test(EEC_2019_QF$valeurs_familiales_traditionnelles, EEC_2019_QA$valeurs_familiales_traditionnelles)
+t.test(EEC_2019_QF$valeurs_familiales_traditionnelles, EEC_2019_QI1$valeurs_familiales_traditionnelles)
+t.test(EEC_2019_QF$valeurs_familiales_traditionnelles, EEC_2019_QI2$valeurs_familiales_traditionnelles)
+```
+
+```{r}
+# Protection environnement :
+mean(EEC_2019_QF$environnement, na.rm = TRUE)
+mean(EEC_2019_QA$environnement, na.rm = TRUE)
+mean(EEC_2019_QI1$environnement, na.rm = TRUE)
+mean(EEC_2019_QI2$environnement, na.rm = TRUE)
+
+t.test(EEC_2019_QF$environnement, EEC_2019_QA$environnement)
+t.test(EEC_2019_QF$environnement, EEC_2019_QI1$environnement)
+t.test(EEC_2019_QF$environnement, EEC_2019_QI2$environnement)
+```
+
+### ii. Identité et comportements politiques :
+```{r}
+# Confiance (provincial - fédéral) :
+mean(EEC_2019_QF$confiance_provincial_federal, na.rm = TRUE)
+mean(EEC_2019_QA$confiance_provincial_federal, na.rm = TRUE)
+mean(EEC_2019_QI1$confiance_provincial_federal, na.rm = TRUE)
+mean(EEC_2019_QI2$confiance_provincial_federal, na.rm = TRUE)
+
+t.test(EEC_2019_QF$confiance_provincial_federal, EEC_2019_QA$confiance_provincial_federal)
+t.test(EEC_2019_QF$confiance_provincial_federal, EEC_2019_QI1$confiance_provincial_federal)
+t.test(EEC_2019_QF$confiance_provincial_federal, EEC_2019_QI2$confiance_provincial_federal)
+```
+
+```{r}
+# Satisfaction (provincial - fédéral) :
+mean(EEC_2019_QF$satisfaction_provincial_federal, na.rm = TRUE)
+mean(EEC_2019_QA$satisfaction_provincial_federal, na.rm = TRUE)
+mean(EEC_2019_QI1$satisfaction_provincial_federal, na.rm = TRUE)
+mean(EEC_2019_QI2$satisfaction_provincial_federal, na.rm = TRUE)
+
+t.test(EEC_2019_QF$satisfaction_provincial_federal, EEC_2019_QA$satisfaction_provincial_federal)
+t.test(EEC_2019_QF$satisfaction_provincial_federal, EEC_2019_QI1$satisfaction_provincial_federal)
+t.test(EEC_2019_QF$satisfaction_provincial_federal, EEC_2019_QI2$satisfaction_provincial_federal)
+```
+
+```{r}
+# Avis (Québec - Canada) :
+mean(EEC_2019_QF$avis_quebec_canada, na.rm = TRUE)
+mean(EEC_2019_QA$avis_quebec_canada, na.rm = TRUE)
+mean(EEC_2019_QI1$avis_quebec_canada, na.rm = TRUE)
+mean(EEC_2019_QI2$avis_quebec_canada, na.rm = TRUE)
+
+t.test(EEC_2019_QF$avis_quebec_canada, EEC_2019_QA$avis_quebec_canada)
+t.test(EEC_2019_QF$avis_quebec_canada, EEC_2019_QI1$avis_quebec_canada)
+t.test(EEC_2019_QF$avis_quebec_canada, EEC_2019_QI2$avis_quebec_canada)
+```
+
+```{r}
+# Appui indépendance :
+mean(EEC_2019_QF$independance, na.rm = TRUE)
+mean(EEC_2019_QA$independance, na.rm = TRUE)
+mean(EEC_2019_QI1$independance, na.rm = TRUE)
+mean(EEC_2019_QI2$independance, na.rm = TRUE)
+
+t.test(EEC_2019_QF$independance, EEC_2019_QA$independance)
+t.test(EEC_2019_QF$independance, EEC_2019_QI1$independance)
+t.test(EEC_2019_QF$independance, EEC_2019_QI2$independance)
+```
+
+```{r}
+# Proche PLQ :
+mean(EEC_2019_QF$proche_PLQ, na.rm = TRUE)
+mean(EEC_2019_QA$proche_PLQ, na.rm = TRUE)
+mean(EEC_2019_QI1$proche_PLQ, na.rm = TRUE)
+mean(EEC_2019_QI2$proche_PLQ, na.rm = TRUE)
+
+t.test(EEC_2019_QF$proche_PLQ, EEC_2019_QA$proche_PLQ)
+t.test(EEC_2019_QF$proche_PLQ, EEC_2019_QI1$proche_PLQ)
+t.test(EEC_2019_QF$proche_PLQ, EEC_2019_QI2$proche_PLQ)
+```
+
+```{r}
+# Proche PLC :
+mean(EEC_2019_QF$proche_PLC, na.rm = TRUE)
+mean(EEC_2019_QA$proche_PLC, na.rm = TRUE)
+mean(EEC_2019_QI1$proche_PLC, na.rm = TRUE)
+mean(EEC_2019_QI2$proche_PLC, na.rm = TRUE)
+
+t.test(EEC_2019_QF$proche_PLC, EEC_2019_QA$proche_PLC)
+t.test(EEC_2019_QF$proche_PLC, EEC_2019_QI1$proche_PLC)
+t.test(EEC_2019_QF$proche_PLC, EEC_2019_QI2$proche_PLC)
+```
+
+## iii. Participation politique :
+```{r}
+# Membre parti (provincial) :
+mean(EEC_2019_QF$membre_parti_provincial, na.rm = TRUE)
+mean(EEC_2019_QA$membre_parti_provincial, na.rm = TRUE)
+mean(EEC_2019_QI1$membre_parti_provincial, na.rm = TRUE)
+mean(EEC_2019_QI2$membre_parti_provincial, na.rm = TRUE)
+
+t.test(EEC_2019_QF$membre_parti_provincial, EEC_2019_QA$membre_parti_provincial)
+t.test(EEC_2019_QF$membre_parti_provincial, EEC_2019_QI1$membre_parti_provincial)
+t.test(EEC_2019_QF$membre_parti_provincial, EEC_2019_QI2$membre_parti_provincial)        
+```
+
+```{r}
+# Vote (fédéral) :
+mean(EEC_2019_QF$vote_2019, na.rm = TRUE)
+mean(EEC_2019_QA$vote_2019, na.rm = TRUE)
+mean(EEC_2019_QI1$vote_2019, na.rm = TRUE)
+mean(EEC_2019_QI2$vote_2019, na.rm = TRUE)
+
+t.test(EEC_2019_QF$vote_2019, EEC_2019_QA$vote_2019)
+t.test(EEC_2019_QF$vote_2019, EEC_2019_QI1$vote_2019)
+t.test(EEC_2019_QF$vote_2019, EEC_2019_QI2$vote_2019)
+```
+
+```{r}
+# Contact élu :
+mean(EEC_2019_QF$contact_elu, na.rm = TRUE)
+mean(EEC_2019_QA$contact_elu, na.rm = TRUE)
+mean(EEC_2019_QI1$contact_elu, na.rm = TRUE)
+mean(EEC_2019_QI2$contact_elu, na.rm = TRUE)
+
+t.test(EEC_2019_QF$contact_elu, EEC_2019_QA$contact_elu)
+t.test(EEC_2019_QF$contact_elu, EEC_2019_QI1$contact_elu)
+t.test(EEC_2019_QF$contact_elu, EEC_2019_QI2$contact_elu)
+```
+
+```{r}
+# Manifestation :
+mean(EEC_2019_QF$manifestation, na.rm = TRUE)
+mean(EEC_2019_QA$manifestation, na.rm = TRUE)
+mean(EEC_2019_QI1$manifestation, na.rm = TRUE)
+mean(EEC_2019_QI2$manifestation, na.rm = TRUE)
+
+t.test(EEC_2019_QF$manifestation, EEC_2019_QA$manifestation)
+t.test(EEC_2019_QF$manifestation, EEC_2019_QI1$manifestation)
+t.test(EEC_2019_QF$manifestation, EEC_2019_QI2$manifestation)
+```
+
+```{r}
+# Pétition :
+mean(EEC_2019_QF$petition, na.rm = TRUE)
+mean(EEC_2019_QA$petition, na.rm = TRUE)
+mean(EEC_2019_QI1$petition, na.rm = TRUE)
+mean(EEC_2019_QI2$petition, na.rm = TRUE)
+
+t.test(EEC_2019_QF$petition, EEC_2019_QA$petition)
+t.test(EEC_2019_QF$petition, EEC_2019_QI1$petition)
+t.test(EEC_2019_QF$petition, EEC_2019_QI2$petition)
+```
+
+```{r}
+# Boycottage :
+mean(EEC_2019_QF$boycottage, na.rm = TRUE)
+mean(EEC_2019_QA$boycottage, na.rm = TRUE)
+mean(EEC_2019_QI1$boycottage, na.rm = TRUE)
+mean(EEC_2019_QI2$boycottage, na.rm = TRUE)
+
+t.test(EEC_2019_QF$boycottage, EEC_2019_QA$boycottage)
+t.test(EEC_2019_QF$boycottage, EEC_2019_QI1$boycottage)
+t.test(EEC_2019_QF$boycottage, EEC_2019_QI2$boycottage)
+```
+
+# 3. Modèles 
+
+## a) Projet sur la diversité provinciale de 2014 :
+
+### i. Valeurs politiques :
+```{r}
+# Rôle gouvernement vie :
+Modele_1 <- lm(role_gouvernement_vie ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_1)
+
+Modele_1bis <- lm(role_gouvernement_vie ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_1bis)
+
+# Programmes sociaux :
+Modele_2 <- lm(programmes_sociaux ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_2)
+
+Modele_2bis <- lm(programmes_sociaux ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_2bis)
+
+# Rôle femmes :
+Modele_3 <- lm(role_femmes ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_3)
+
+Modele_3bis <- lm(role_femmes ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_3bis)
+
+# Mariage homosexuel :
+Modele_4 <- lm(mariage_personnes_homosexuelles ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_4)
+
+Modele_4bis <- lm(mariage_personnes_homosexuelles ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_4bis)
+
+# Droit avortement :
+Modele_5 <- lm(droit_avortement ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_5)
+
+Modele_5bis <- lm(droit_avortement ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_5bis)
+
+# Protection environnement :
+Modele_6 <- lm(environnement ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_6)
+
+Modele_6bis <- lm(environnement ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_6bis)
+```
+
+### ii. Identité et comportements politiques :
+```{r}
+# Confiance (provincial - fédéral) :
+Modele_13 <- lm(confiance_provincial_federal ~ langue_maison_francais +  minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_13)
+
+Modele_13bis <- lm(confiance_provincial_federal ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_13bis)
+
+Modele_13ter <- lm(confiance_provincial_federal ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + charte_des_valeurs + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_13ter)
+
+# Attachement (Québec - Canada) :
+Modele_14 <- lm(attachement_quebec_canada ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_14)
+
+Modele_14bis <- lm(attachement_quebec_canada ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_14bis)
+
+Modele_14ter <- lm(attachement_quebec_canada ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + charte_des_valeurs + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_14ter)
+
+# Identité (Québec) :
+Modele_15 <- lm(identite ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_15)
+
+Modele_15bis <- lm(identite ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_15bis)
+
+Modele_15ter <- lm(identite ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + charte_des_valeurs + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_15ter)
+
+# Appui indépendance :
+Modele_16 <- lm(independance ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_16)
+
+Modele_16bis <- lm(independance ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_16bis)
+
+Modele_16ter <- lm(independance ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + charte_des_valeurs + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_16ter)
+
+# Proche PLQ :
+Modele_17 <- lm(proche_PLQ ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_17)
+
+Modele_17bis <- lm(proche_PLQ ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_17bis)
+
+Modele_17ter <- lm(proche_PLQ ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + charte_des_valeurs + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_17ter)
+
+# Proche PLC :
+Modele_18 <- lm(proche_PLC ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_18)
+
+Modele_18bis <- lm(proche_PLC ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_18bis)
+
+Modele_18ter <- lm(proche_PLC ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + charte_des_valeurs + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_18ter)
+```
+
+### iii. Participation politique :
+```{r}
+# Vote (provincial) :
+Modele_25 <- lm(vote_provincial ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_25)
+
+Modele_25bis <- lm(vote_provincial ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_25bis)
+
+Modele_25ter <- lm(vote_provincial ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal + discrimination_contextes, data = PDP_2014_QI)
+summary(Modele_25ter)
+
+# Vote (fédéral) :
+Modele_26 <- lm(vote_federal ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_26)
+
+Modele_26bis <- lm(vote_federal ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_26bis)
+
+Modele_26ter <- lm(vote_federal ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal + discrimination_contextes, data = PDP_2014_QI)
+summary(Modele_26ter)
+
+# Contact élu :
+Modele_27 <- lm(contact_elu ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_27)
+
+Modele_27bis <- lm(contact_elu ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_27bis)
+
+Modele_27ter <- lm(contact_elu ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal + discrimination_contextes, data = PDP_2014_QI)
+summary(Modele_27ter)
+
+# Manifestation :
+Modele_28 <- lm(manifestation ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_28)
+
+Modele_28bis <- lm(manifestation ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_28bis)
+
+Modele_28ter <- lm(manifestation ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal + discrimination_contextes, data = PDP_2014_QI)
+summary(Modele_28ter)
+
+# Pétition :
+Modele_29 <- lm(petition ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_29)
+
+Modele_29bis <- lm(petition ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_29bis)
+
+Modele_29ter <- lm(petition ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal+ discrimination_contextes, data = PDP_2014_QI)
+summary(Modele_29ter)
+
+# Boycottage :
+Modele_30 <- lm(boycottage ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_30)
+
+Modele_30bis <- lm(boycottage ~ langue_contextes_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = PDP_2014_QI)
+summary(Modele_30bis)
+
+Modele_30ter <- lm(boycottage ~ langue_maison_francais + minorite_visible_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal + discrimination_contextes, data = PDP_2014_QI)
+summary(Modele_30ter)
+```
+
+## b) Étude électorale canadienne de 2019 :
+
+### i. Valeurs politiques :
+```{r}
+# Échelle gauche-droite :
+Modele_7 <- lm(echelle_gauche_droite ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal + sondage, data = EEC_2019_QI)
+summary(Modele_7)
+
+# Rôle gouvernement écart :
+Modele_8 <- lm(role_gouvernement_ecart ~ langue_maison_francais + immigrant_deuxieme_generation  + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal + sondage, data = EEC_2019_QI)
+summary(Modele_8)
+
+# Rôle femmes :
+Modele_9 <- lm(role_femmes ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal + sondage, data = EEC_2019_QI)
+summary(Modele_9)
+
+# Droits personnes homosexuelles  :
+Modele_10 <- lm(droits_personnes_homosexuelles ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal + sondage, data = EEC_2019_QI)
+summary(Modele_10)
+
+# Valeurs familiales traditionnelles :
+Modele_11 <- lm(valeurs_familiales_traditionnelles ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = EEC_2019_QI)
+summary(Modele_11)
+
+# Protection environnement :
+Modele_12 <- lm(environnement ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = EEC_2019_QI)
+summary(Modele_12)
+```
+
+### ii. Identité et comportements politiques :
+```{r}
+# Confiance (provincial - fédéral) :
+Modele_19 <- lm(confiance_provincial_federal ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = EEC_2019_QI)
+summary(Modele_19)
+
+# Satisfaction (provincial - fédéral) :
+Modele_20 <- lm(satisfaction_provincial_federal ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal + sondage, data = EEC_2019_QI)
+summary(Modele_20)
+
+# Avis (Québec - Canada) :
+Modele_21 <- lm(avis_quebec_canada ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = EEC_2019_QI)
+summary(Modele_21)
+
+# Appui indépendance :
+Modele_22 <- lm(independance ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal + sondage, data = EEC_2019_QI)
+summary(Modele_22)
+
+# Proche PLQ :
+Modele_23 <- lm(proche_PLQ ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = EEC_2019_QI)
+summary(Modele_23)
+
+# Proche PLC :
+Modele_24 <- lm(proche_PLC ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + atheisme + islam + importance_religion + femme + age + universite + revenu + agglomeration_montreal + sondage, data = EEC_2019_QI)
+summary(Modele_24)
+```
+
+### iii. Participation politique :
+```{r}
+# Membre parti (provincial) :
+Modele_31 <- lm(membre_parti_provincial ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = EEC_2019_QI)
+summary(Modele_31)
+
+# Vote (fédéral) :
+Modele_32 <- lm(vote_2019 ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal + sondage, data = EEC_2019_QI)
+summary(Modele_32)
+
+# Contact élu :
+Modele_33 <- lm(contact_elu ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = EEC_2019_QI)
+summary(Modele_33)
+
+# Manifestation :
+Modele_34 <- lm(manifestation ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal + sondage, data = EEC_2019_QI)
+summary(Modele_34)
+
+# Pétition :
+Modele_35 <- lm(petition ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal, data = EEC_2019_QI)
+summary(Modele_35)
+
+# Boycottage :
+Modele_36 <- lm(boycottage ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal + sondage, data = EEC_2019_QI)
+summary(Modele_36)
+
+# Volontariat :
+Modele_37 <- lm(volontariat ~ langue_maison_francais + immigrant_deuxieme_generation + annees_canada + importance_religion + femme + age + universite + revenu + agglomeration_montreal + sondage, data = EEC_2019_QI)
+summary(Modele_37)
+```
+
+# 4. Impression des modèles 
+
+## a) Projet sur la diversité provinciale de 2014 :
+
+### i. Valeurs politiques : 
+```{r}
+stargazer(Modele_1, Modele_2, Modele_3, Modele_4, Modele_5, Modele_6, 
+          omit.stat = c("LL","ser","f"),
+          no.space = TRUE,
+          out = "Tableau_3.tex")
+```
+
+### ii. Identité et comportements politiques :
+```{r}
+stargazer(Modele_13, Modele_14, Modele_15, Modele_16, Modele_17, Modele_18, 
+          omit.stat = c("LL","ser","f"),
+          no.space = TRUE,
+          out = "Tableau_7.tex")
+```
+
+### iii. Participation politique :
+```{r}
+stargazer(Modele_25, Modele_26, Modele_27, Modele_28, Modele_29, Modele_30, 
+          omit.stat = c("LL","ser","f"),
+          no.space = TRUE,
+          out = "Tableau_13.tex")
+```
+
+## b) Étude électorale canadienne de 2019 :
+
+### i. Valeurs politiques : 
+```{r}
+stargazer(Modele_7, Modele_8, Modele_9, Modele_10, Modele_11, Modele_12, 
+          omit.stat = c("LL","ser","f"),
+          no.space = TRUE,
+          out = "Tableau_5.tex")
+```
+
+### ii. Identité et comportements politiques :
+```{r}
+stargazer(Modele_19, Modele_20, Modele_21, Modele_22, Modele_23, Modele_24, 
+          omit.stat = c("LL","ser","f"),
+          no.space = TRUE,
+          out = "Tableau_10.tex")
+```
+
+### iii. Participation politique :
+```{r}
+stargazer(Modele_31, Modele_32, Modele_33, Modele_34, Modele_35, Modele_36, 
+          omit.stat = c("LL","ser","f"),
+          no.space = TRUE,
+          out = "Tableau_16.tex")
+```
+
+## c) Annexes :
+
+### Annexe C :
+```{r}
+stargazer(Modele_1bis, Modele_2bis, Modele_3bis, Modele_4bis, Modele_5bis, Modele_6bis, 
+          omit.stat = c("LL","ser","f"),
+          no.space = TRUE,
+          out = "Tableau_3bis.tex")
+```
+
+### Annexe D :
+```{r}
+stargazer(Modele_13bis, Modele_14bis, Modele_15bis, Modele_16bis, Modele_17bis, Modele_18bis, 
+          omit.stat = c("LL","ser","f"),
+          no.space = TRUE,
+          out = "Tableau_7bis.tex")
+```
+
+### Annexe E :
+```{r}
+stargazer(Modele_13ter, Modele_14ter, Modele_15ter, Modele_16ter, Modele_17ter, Modele_18ter, 
+          omit.stat = c("LL","ser","f"),
+          no.space = TRUE,
+          out = "Tableau_7ter.tex")
+```
+
+### Annexe F :
+```{r}
+stargazer(Modele_25bis, Modele_26bis, Modele_27bis, Modele_28bis, Modele_29bis, Modele_30bis, 
+          omit.stat = c("LL","ser","f"),
+          no.space = TRUE,
+          out = "Tableau_13bis.tex")
+```
+
+### Annexe F :
+```{r}
+stargazer(Modele_25ter, Modele_26ter, Modele_27ter, Modele_28ter, Modele_29ter, Modele_30ter, 
+          omit.stat = c("LL","ser","f"),
+          no.space = TRUE,
+          out = "Tableau_13ter.tex")
+```
+
+# 5. Prédictions :
+
+## a) Projet sur la diversité provinciale de 2014 :
+
+### i. Confiance (provincial - fédéral) :
+
+#### Langue maison :
+```{r}
+# Spécifications du modèle :
+Modele_13_P <- expand.grid(langue_maison_francais = seq(0, 1, 1), 
+                          minorite_visible_deuxieme_generation =                                                                   mean(PDP_2014_QI$minorite_visible_deuxieme_generation, na.rm = TRUE),
+                          annees_canada = mean(PDP_2014_QI$annees_canada, na.rm = TRUE),
+                          atheisme = mean(PDP_2014_QI$atheisme, na.rm = TRUE),
+                          islam = mean(PDP_2014_QI$islam, na.rm = TRUE),
+                          importance_religion = mean(PDP_2014_QI$importance_religion, na.rm = TRUE),
+                          femme = mean(PDP_2014_QI$femme, na.rm = TRUE),
+                          age = mean(PDP_2014_QI$age, na.rm = TRUE),
+                          universite = mean(PDP_2014_QI$universite, na.rm = TRUE),
+                          revenu = mean(PDP_2014_QI$revenu, na.rm = TRUE),
+                          agglomeration_montreal = mean(PDP_2014_QI$agglomeration_montreal,                                        na.rm = TRUE)) 
+
+# Calculs des valeurs prédites :
+Modele_13_P [,c("Prédiction")] <- predict(Modele_13,
+                                      newdata = Modele_13_P,
+                                      type = "response")
+```
+
+#### Contextes :
+```{r}
+# Spécifications du modèle :
+Modele_13bis_P <- expand.grid(langue_contextes_francais = seq(0, 3, 1), 
+                          minorite_visible_deuxieme_generation =                                                                   mean(PDP_2014_QI$minorite_visible_deuxieme_generation, na.rm = TRUE),
+                          annees_canada = mean(PDP_2014_QI$annees_canada, na.rm = TRUE),
+                          atheisme = mean(PDP_2014_QI$atheisme, na.rm = TRUE),
+                          islam = mean(PDP_2014_QI$islam, na.rm = TRUE),
+                          importance_religion = mean(PDP_2014_QI$importance_religion, na.rm = TRUE),
+                          femme = mean(PDP_2014_QI$femme, na.rm = TRUE),
+                          age = mean(PDP_2014_QI$age, na.rm = TRUE),
+                          universite = mean(PDP_2014_QI$universite, na.rm = TRUE),
+                          revenu = mean(PDP_2014_QI$revenu, na.rm = TRUE),
+                          agglomeration_montreal = mean(PDP_2014_QI$agglomeration_montreal,                                        na.rm = TRUE)) 
+
+# Calculs des valeurs prédites :
+Modele_13bis_P [,c("Prédiction")] <- predict(Modele_13bis,
+                                      newdata = Modele_13bis_P,
+                                      type = "response")
+```
+
+### ii. Attachement (Québec - Canada) :
+
+#### Langue maison :
+```{r}
+# Spécifications du modèle :
+Modele_14_P <- expand.grid(langue_maison_francais = seq(0, 1, 1), 
+                          minorite_visible_deuxieme_generation =                                                                   mean(PDP_2014_QI$minorite_visible_deuxieme_generation, na.rm = TRUE),
+                          annees_canada = mean(PDP_2014_QI$annees_canada, na.rm = TRUE),
+                          atheisme = mean(PDP_2014_QI$atheisme, na.rm = TRUE),
+                          islam = mean(PDP_2014_QI$islam, na.rm = TRUE),
+                          importance_religion = mean(PDP_2014_QI$importance_religion, na.rm = TRUE),
+                          femme = mean(PDP_2014_QI$femme, na.rm = TRUE),
+                          age = mean(PDP_2014_QI$age, na.rm = TRUE),
+                          universite = mean(PDP_2014_QI$universite, na.rm = TRUE),
+                          revenu = mean(PDP_2014_QI$revenu, na.rm = TRUE),
+                          agglomeration_montreal = mean(PDP_2014_QI$agglomeration_montreal,                                        na.rm = TRUE)) 
+
+# Calculs des valeurs prédites :
+Modele_14_P [,c("Prédiction")] <- predict(Modele_14,
+                                      newdata = Modele_14_P,
+                                      type = "response")
+```
+
+#### Contextes :
+```{r}
+# Spécifications du modèle :
+Modele_14bis_P <- expand.grid(langue_contextes_francais = seq(0, 3, 1), 
+                          minorite_visible_deuxieme_generation =                                                                   mean(PDP_2014_QI$minorite_visible_deuxieme_generation, na.rm = TRUE),
+                          annees_canada = mean(PDP_2014_QI$annees_canada, na.rm = TRUE),
+                          atheisme = mean(PDP_2014_QI$atheisme, na.rm = TRUE),
+                          islam = mean(PDP_2014_QI$islam, na.rm = TRUE),
+                          importance_religion = mean(PDP_2014_QI$importance_religion, na.rm = TRUE),
+                          femme = mean(PDP_2014_QI$femme, na.rm = TRUE),
+                          age = mean(PDP_2014_QI$age, na.rm = TRUE),
+                          universite = mean(PDP_2014_QI$universite, na.rm = TRUE),
+                          revenu = mean(PDP_2014_QI$revenu, na.rm = TRUE),
+                          agglomeration_montreal = mean(PDP_2014_QI$agglomeration_montreal,                                        na.rm = TRUE)) 
+
+# Calculs des valeurs prédites :
+Modele_14bis_P [,c("Prédiction")] <- predict(Modele_14bis,
+                                      newdata = Modele_14bis_P,
+                                      type = "response")
+```
+
+### iii. Identité (Québec) :
+
+#### Langue maison :
+```{r}
+# Spécifications du modèle :
+Modele_15_P <- expand.grid(langue_maison_francais = seq(0, 1, 1), 
+                          minorite_visible_deuxieme_generation =                                                                   mean(PDP_2014_QI$minorite_visible_deuxieme_generation, na.rm = TRUE),
+                          annees_canada = mean(PDP_2014_QI$annees_canada, na.rm = TRUE),
+                          atheisme = mean(PDP_2014_QI$atheisme, na.rm = TRUE),
+                          islam = mean(PDP_2014_QI$islam, na.rm = TRUE),
+                          importance_religion = mean(PDP_2014_QI$importance_religion, na.rm = TRUE),
+                          femme = mean(PDP_2014_QI$femme, na.rm = TRUE),
+                          age = mean(PDP_2014_QI$age, na.rm = TRUE),
+                          universite = mean(PDP_2014_QI$universite, na.rm = TRUE),
+                          revenu = mean(PDP_2014_QI$revenu, na.rm = TRUE),
+                          agglomeration_montreal = mean(PDP_2014_QI$agglomeration_montreal,                                        na.rm = TRUE)) 
+
+# Calculs des valeurs prédites :
+Modele_15_P [,c("Prédiction")] <- predict(Modele_15,
+                                      newdata = Modele_15_P,
+                                      type = "response")
+```
+
+#### Contextes :
+```{r}
+# Spécifications du modèle :
+Modele_15bis_P <- expand.grid(langue_contextes_francais = seq(0, 3, 1), 
+                          minorite_visible_deuxieme_generation =                                                                   mean(PDP_2014_QI$minorite_visible_deuxieme_generation, na.rm = TRUE),
+                          annees_canada = mean(PDP_2014_QI$annees_canada, na.rm = TRUE),
+                          atheisme = mean(PDP_2014_QI$atheisme, na.rm = TRUE),
+                          islam = mean(PDP_2014_QI$islam, na.rm = TRUE),
+                          importance_religion = mean(PDP_2014_QI$importance_religion, na.rm = TRUE),
+                          femme = mean(PDP_2014_QI$femme, na.rm = TRUE),
+                          age = mean(PDP_2014_QI$age, na.rm = TRUE),
+                          universite = mean(PDP_2014_QI$universite, na.rm = TRUE),
+                          revenu = mean(PDP_2014_QI$revenu, na.rm = TRUE),
+                          agglomeration_montreal = mean(PDP_2014_QI$agglomeration_montreal,                                        na.rm = TRUE)) 
+
+# Calculs des valeurs prédites :
+Modele_15bis_P [,c("Prédiction")] <- predict(Modele_15bis,
+                                      newdata = Modele_15bis_P,
+                                      type = "response")
+```
+
+### iv. Appui indépendance :
+
+#### Contextes :
+```{r}
+# Spécifications du modèle :
+Modele_16bis_P <- expand.grid(langue_contextes_francais = seq(0, 3, 1), 
+                          minorite_visible_deuxieme_generation =                                                                   mean(PDP_2014_QI$minorite_visible_deuxieme_generation, na.rm = TRUE),
+                          annees_canada = mean(PDP_2014_QI$annees_canada, na.rm = TRUE),
+                          atheisme = mean(PDP_2014_QI$atheisme, na.rm = TRUE),
+                          islam = mean(PDP_2014_QI$islam, na.rm = TRUE),
+                          importance_religion = mean(PDP_2014_QI$importance_religion, na.rm = TRUE),
+                          femme = mean(PDP_2014_QI$femme, na.rm = TRUE),
+                          age = mean(PDP_2014_QI$age, na.rm = TRUE),
+                          universite = mean(PDP_2014_QI$universite, na.rm = TRUE),
+                          revenu = mean(PDP_2014_QI$revenu, na.rm = TRUE),
+                          agglomeration_montreal = mean(PDP_2014_QI$agglomeration_montreal,                                        na.rm = TRUE)) 
+
+# Calculs des valeurs prédites :
+Modele_16bis_P [,c("Prédiction")] <- predict(Modele_16bis,
+                                      newdata = Modele_16bis_P,
+                                      type = "response")
+```
+
+### v. Proche PLQ :
+
+#### Langue maison :
+```{r}
+# Spécifications du modèle :
+Modele_17_P <- expand.grid(langue_maison_francais = seq(0, 1, 1), 
+                          minorite_visible_deuxieme_generation =                                                                   mean(PDP_2014_QI$minorite_visible_deuxieme_generation, na.rm = TRUE),
+                          annees_canada = mean(PDP_2014_QI$annees_canada, na.rm = TRUE),
+                          atheisme = mean(PDP_2014_QI$atheisme, na.rm = TRUE),
+                          islam = mean(PDP_2014_QI$islam, na.rm = TRUE),
+                          importance_religion = mean(PDP_2014_QI$importance_religion, na.rm = TRUE),
+                          femme = mean(PDP_2014_QI$femme, na.rm = TRUE),
+                          age = mean(PDP_2014_QI$age, na.rm = TRUE),
+                          universite = mean(PDP_2014_QI$universite, na.rm = TRUE),
+                          revenu = mean(PDP_2014_QI$revenu, na.rm = TRUE),
+                          agglomeration_montreal = mean(PDP_2014_QI$agglomeration_montreal,                                        na.rm = TRUE)) 
+
+# Calculs des valeurs prédites :
+Modele_17_P [,c("Prédiction")] <- predict(Modele_17,
+                                      newdata = Modele_17_P,
+                                      type = "response")
+```
+
+#### Contextes :
+```{r}
+# Spécifications du modèle :
+Modele_17bis_P <- expand.grid(langue_contextes_francais = seq(0, 3, 1), 
+                          minorite_visible_deuxieme_generation =                                                                   mean(PDP_2014_QI$minorite_visible_deuxieme_generation, na.rm = TRUE),
+                          annees_canada = mean(PDP_2014_QI$annees_canada, na.rm = TRUE),
+                          atheisme = mean(PDP_2014_QI$atheisme, na.rm = TRUE),
+                          islam = mean(PDP_2014_QI$islam, na.rm = TRUE),
+                          importance_religion = mean(PDP_2014_QI$importance_religion, na.rm = TRUE),
+                          femme = mean(PDP_2014_QI$femme, na.rm = TRUE),
+                          age = mean(PDP_2014_QI$age, na.rm = TRUE),
+                          universite = mean(PDP_2014_QI$universite, na.rm = TRUE),
+                          revenu = mean(PDP_2014_QI$revenu, na.rm = TRUE),
+                          agglomeration_montreal = mean(PDP_2014_QI$agglomeration_montreal,                                        na.rm = TRUE)) 
+
+# Calculs des valeurs prédites :
+Modele_17bis_P [,c("Prédiction")] <- predict(Modele_17bis,
+                                      newdata = Modele_17bis_P,
+                                      type = "response")
+```
+
+### vi. Proche PLC :
+
+#### Contextes :
+```{r}
+# Spécifications du modèle :
+Modele_18bis_P <- expand.grid(langue_contextes_francais = seq(0, 3, 1), 
+                          minorite_visible_deuxieme_generation =                                                                   mean(PDP_2014_QI$minorite_visible_deuxieme_generation, na.rm = TRUE),
+                          annees_canada = mean(PDP_2014_QI$annees_canada, na.rm = TRUE),
+                          atheisme = mean(PDP_2014_QI$atheisme, na.rm = TRUE),
+                          islam = mean(PDP_2014_QI$islam, na.rm = TRUE),
+                          importance_religion = mean(PDP_2014_QI$importance_religion, na.rm = TRUE),
+                          femme = mean(PDP_2014_QI$femme, na.rm = TRUE),
+                          age = mean(PDP_2014_QI$age, na.rm = TRUE),
+                          universite = mean(PDP_2014_QI$universite, na.rm = TRUE),
+                          revenu = mean(PDP_2014_QI$revenu, na.rm = TRUE),
+                          agglomeration_montreal = mean(PDP_2014_QI$agglomeration_montreal,                                        na.rm = TRUE)) 
+
+# Calculs des valeurs prédites :
+Modele_18bis_P [,c("Prédiction")] <- predict(Modele_18bis,
+                                      newdata = Modele_18bis_P,
+                                      type = "response")
+```
+
+## b) Étude électorale canadienne de 2019 :
+
+### i. Confiance (provincial - fédéral) :
+```{r}
+# Spécifications du modèle :
+Modele_19_P <- expand.grid(langue_maison_francais = seq(0, 1, 1), 
+                          immigrant_deuxieme_generation =                                                                         mean(EEC_2019_QI$immigrant_deuxieme_generation, na.rm = TRUE),
+                          annees_canada = mean(EEC_2019_QI$annees_canada, na.rm = TRUE),
+                          atheisme = mean(EEC_2019_QI$atheisme, na.rm = TRUE),
+                          islam = mean(EEC_2019_QI$islam, na.rm = TRUE),
+                          importance_religion = mean(EEC_2019_QI$importance_religion, na.rm = TRUE),
+                          femme = mean(EEC_2019_QI$femme, na.rm = TRUE),
+                          age = mean(EEC_2019_QI$age, na.rm = TRUE),
+                          universite = mean(EEC_2019_QI$universite, na.rm = TRUE),
+                          revenu = mean(EEC_2019_QI$revenu, na.rm = TRUE),
+                          agglomeration_montreal = mean(EEC_2019_QI$agglomeration_montreal,                                       na.rm = TRUE)) 
+
+# Calculs des valeurs prédites :
+Modele_19_P [,c("Prédiction")] <- predict(Modele_19,
+                                      newdata = Modele_19_P,
+                                      type = "response")
+```
+
+### ii. Satisfaction (provincial - fédéral) :
+```{r}
+# Spécifications du modèle :
+Modele_20_P <- expand.grid(langue_maison_francais = seq(0, 1, 1), 
+                          immigrant_deuxieme_generation =                                                                         mean(EEC_2019_QI$immigrant_deuxieme_generation, na.rm = TRUE),
+                          annees_canada = mean(EEC_2019_QI$annees_canada, na.rm = TRUE),
+                          atheisme = mean(EEC_2019_QI$atheisme, na.rm = TRUE),
+                          islam = mean(EEC_2019_QI$islam, na.rm = TRUE),
+                          importance_religion = mean(EEC_2019_QI$importance_religion, na.rm = TRUE),
+                          femme = mean(EEC_2019_QI$femme, na.rm = TRUE),
+                          age = mean(EEC_2019_QI$age, na.rm = TRUE),
+                          universite = mean(EEC_2019_QI$universite, na.rm = TRUE),
+                          revenu = mean(EEC_2019_QI$revenu, na.rm = TRUE),
+                          agglomeration_montreal = mean(EEC_2019_QI$agglomeration_montreal,                                       na.rm = TRUE),
+                          sondage = mean(EEC_2019_QI$sondage, na.rm = TRUE)) 
+
+# Calculs des valeurs prédites :
+Modele_20_P [,c("Prédiction")] <- predict(Modele_20,
+                                      newdata = Modele_20_P,
+                                      type = "response")
+```
+
+### iii. Avis (Québec - Canada) :
+```{r}
+# Spécifications du modèle :
+Modele_21_P <- expand.grid(langue_maison_francais = seq(0, 1, 1), 
+                          immigrant_deuxieme_generation =                                                                         mean(EEC_2019_QI$immigrant_deuxieme_generation, na.rm = TRUE),
+                          annees_canada = mean(EEC_2019_QI$annees_canada, na.rm = TRUE),
+                          atheisme = mean(EEC_2019_QI$atheisme, na.rm = TRUE),
+                          islam = mean(EEC_2019_QI$islam, na.rm = TRUE),
+                          importance_religion = mean(EEC_2019_QI$importance_religion, na.rm = TRUE),
+                          femme = mean(EEC_2019_QI$femme, na.rm = TRUE),
+                          age = mean(EEC_2019_QI$age, na.rm = TRUE),
+                          universite = mean(EEC_2019_QI$universite, na.rm = TRUE),
+                          revenu = mean(EEC_2019_QI$revenu, na.rm = TRUE),
+                          agglomeration_montreal = mean(EEC_2019_QI$agglomeration_montreal,                                       na.rm = TRUE)) 
+
+# Calculs des valeurs prédites :
+Modele_21_P [,c("Prédiction")] <- predict(Modele_21,
+                                      newdata = Modele_21_P,
+                                      type = "response")
+```
+
+### iv. Appui indépendance :
+```{r}
+# Spécifications du modèle :
+Modele_22_P <- expand.grid(langue_maison_francais = seq(0, 1, 1), 
+                          immigrant_deuxieme_generation =                                                                         mean(EEC_2019_QI$immigrant_deuxieme_generation, na.rm = TRUE),
+                          annees_canada = mean(EEC_2019_QI$annees_canada, na.rm = TRUE),
+                          atheisme = mean(EEC_2019_QI$atheisme, na.rm = TRUE),
+                          islam = mean(EEC_2019_QI$islam, na.rm = TRUE),
+                          importance_religion = mean(EEC_2019_QI$importance_religion, na.rm = TRUE),
+                          femme = mean(EEC_2019_QI$femme, na.rm = TRUE),
+                          age = mean(EEC_2019_QI$age, na.rm = TRUE),
+                          universite = mean(EEC_2019_QI$universite, na.rm = TRUE),
+                          revenu = mean(EEC_2019_QI$revenu, na.rm = TRUE),
+                          agglomeration_montreal = mean(EEC_2019_QI$agglomeration_montreal,                                       na.rm = TRUE),
+                          sondage = mean(EEC_2019_QI$sondage, na.rm = TRUE)) 
+
+# Calculs des valeurs prédites :
+Modele_22_P [,c("Prédiction")] <- predict(Modele_22,
+                                      newdata = Modele_22_P,
+                                      type = "response")
+```
+
+### v. Proche PLQ :
+```{r}
+# Spécifications du modèle :
+Modele_23_P <- expand.grid(langue_maison_francais = seq(0, 1, 1), 
+                          immigrant_deuxieme_generation =                                                                         mean(EEC_2019_QI$immigrant_deuxieme_generation, na.rm = TRUE),
+                          annees_canada = mean(EEC_2019_QI$annees_canada, na.rm = TRUE),
+                          atheisme = mean(EEC_2019_QI$atheisme, na.rm = TRUE),
+                          islam = mean(EEC_2019_QI$islam, na.rm = TRUE),
+                          importance_religion = mean(EEC_2019_QI$importance_religion, na.rm = TRUE),
+                          femme = mean(EEC_2019_QI$femme, na.rm = TRUE),
+                          age = mean(EEC_2019_QI$age, na.rm = TRUE),
+                          universite = mean(EEC_2019_QI$universite, na.rm = TRUE),
+                          revenu = mean(EEC_2019_QI$revenu, na.rm = TRUE),
+                          agglomeration_montreal = mean(EEC_2019_QI$agglomeration_montreal,                                       na.rm = TRUE)) 
+
+# Calculs des valeurs prédites :
+Modele_23_P [,c("Prédiction")] <- predict(Modele_23,
+                                      newdata = Modele_23_P,
+                                      type = "response")
+```
+
+# 6. Statistiques descriptives :
+
+## a) Projet sur la diversité provinciale de 2014 :
+```{r}
+stargazer(as.data.frame(PDP_2014_QI [, c("langue_maison_francais", "langue_maternelle_francais", "minorite_visible_deuxieme_generation", "annees_canada", "atheisme", "islam", "importance_religion", "femme", "age", "universite", "revenu", "agglomeration_montreal")]), 
+          omit.stat = c("LL", "ser", "f"),
+          no.space = TRUE,
+          out = "Tableau_1A.tex")
+```
+
+## b) Étude électorale canadienne de 2019 :
+```{r}
+stargazer(as.data.frame(EEC_2019_QI [, c("langue_maison_francais", "langue_enfance_francais", "immigrant_deuxieme_generation", "annees_canada", "atheisme", "islam", "importance_religion", "femme", "age", "universite", "revenu", "agglomeration_montreal")]), 
+          omit.stat = c("LL", "ser", "f"),
+          no.space = TRUE,
+          out = "Tableau_1A.tex")
+```

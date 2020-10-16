@@ -1,0 +1,296 @@
+---
+title: "1 : Nettoyage des données du Projet sur la diversité provinciale de 2014"
+author: "Philippe Chassé"
+date: "02/07/2020"
+output: pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Nettoyage de l'environnement R :
+rm(list = ls())
+```
+
+# 1. Téléchargement des prologiciels et des données :
+
+## a) Prologiciels :
+```{r}
+# Prologiciels nécessaires :
+pacman::p_load(haven, foreign, skimr, tidyverse, PROscorerTools, plyr, knitr, car, psy, FactoMineR, factoextra, stats, ggpubr)
+```
+
+## b) Données :
+```{r}
+# Projet sur la diversité provinciale de 2014 :
+PDP_2014_1 <- read_dta("PDP_2014.dta")
+```
+
+# 2. Sélection des variables d'intérêt :
+```{r}
+PDP_2014_2 <- PDP_2014_1 %>% 
+  
+# Valeurs politiques :
+select(role_gouvernement_vie = Q46E, programmes_sociaux = Q44D, role_femmes = Q44A, mariage_personnes_homosexuelles = Q41B, droit_avortement = Q46C, environnement = Q44B, 
+
+# Identité et comportements politiques : 
+confiance_gouvernement_provincial = Q77A, confiance_gouvernement_federal = Q77B, attachement_province = Q31B, attachement_canada = Q31A, identite = Q36, independance = Q39, proche_provincial = Q74QC, proche_federal = Q75T,
+
+# Participation politique :
+vote_provincial = Q71B, vote_federal = Q71A, contact_elu = Q72A, manifestation = Q72C, petition = Q72D, boycottage = Q72B,   
+
+# Langue :
+langue_maison = Q916, langue_travail = Q918B, langue_amis = Q918C, langue_maternelle = Q12, langue_sondage = LANG,
+
+# Religion :
+religion = Q98T, importance_religion = Q46B,
+  
+# Statut d'immigrant :
+statut_immigration = Q99TGR, origine = MINO, annees_canada = Q910, 
+
+# Caractéristiques sociodémographiques :
+province = PROV, genre = Q91, groupe_age = Q13GR, education = Q93GR, revenu = Q97, code_postal = CODE1,  
+                
+# Autres :
+efficacite_interne_federal = Q76D, efficacite_interne_provincial = Q76A, efficacite_externe_federal = Q76E, efficacite_externe_provincial = Q76B, discrimination_proprietaires = Q73A, discrimination_employeurs = Q73B, discrimination_employes_gouvernement = Q73C, discrimination_voisins = Q73D, discrimination_police = Q73E, charte_des_valeurs = Q4Y)
+
+# Variables intéressantes :
+# statut_emploi = Q95, maitrise_langue = Q915, crucifix = Q44F, niveau_immigration_province = Q21B, sentiment_francophones = Q81I, sentiment_accepte_canada = Q917B, sentiment_accepte_province = Q917A, investissement_federal_province = Q33, respect_federal_province = Q34, menace_francais = Q311B, culture_differente_province = Q311C)
+```
+
+# 3. Recodage des variables :
+
+### i. Valeurs politiques :
+```{r}
+# Rôle gouvernement vie (1 = le gouvernement joue un trop grand rôle dans nos vies ; 4 = le gouvernement ne joue pas un assez grand rôle dans nos vies) :
+PDP_2014_2$role_gouvernement_vie <- recode(PDP_2014_2$role_gouvernement_vie, "8 = NA; 9 = NA")
+
+# Programmes sociaux (1 = le gouvernement ne devrait pas investir dans les programmes sociaux plutôt que réduire les impôts ; 4 = le gouvernement devrait investir dans les programmes sociaux plutôt que réduire les impôts) :
+PDP_2014_2$programmes_sociaux <- recode(PDP_2014_2$programmes_sociaux, "1 = 4; 2 = 3; 3 = 2; 4 = 1; 8 = NA; 9 = NA")
+
+# Rôle femmes (1 = les femmes devraient rester à la maison ; 4 = les femmes ne devraient pas rester à la maison) :
+PDP_2014_2$role_femmes <- recode(PDP_2014_2$role_femmes, "8 = NA; 9 = NA")
+
+# Mariage homosexuel (1 = les personnes homosexuelles ne devraient pas pouvoir se marier ; 4 = les personnes homosexuelles devraient pouvoir se marier) :
+PDP_2014_2$mariage_personnes_homosexuelles <- recode(PDP_2014_2$mariage_personnes_homosexuelles, "8 = NA; 9 = NA")
+
+# Droit avortement (1 = l'accès à l'avortement est trop facile de nos jours ; 4 = l'accès à l'avortement n'est pas assez facile de nos jours) :
+PDP_2014_2$droit_avortement <- recode(PDP_2014_2$droit_avortement, "8 = NA; 9 = NA")
+
+# Protection environnement (1 = ne serait pas prêt à réduire sa qualité de vie pour protéger l'environnement ; 4 = serait prêt à réduire sa qualité de vie pour protéger l'environnement) :
+PDP_2014_2$environnement <- recode(PDP_2014_2$environnement, "1 = 4; 2 = 3; 3 = 2; 4 = 1; 8 = NA; 9 = NA")
+```
+
+### ii. Identité et comportements politiques :
+```{r}
+# Confiance (fédéral) (0 = pas du tout confiant ; 10 = très confiant) :
+PDP_2014_2$confiance_gouvernement_federal <- recode(PDP_2014_2$confiance_gouvernement_federal, "98 = NA; 99 = NA")
+
+# Confiance (provincial) (0 = pas du tout confiant ; 10 = très confiant) :
+PDP_2014_2$confiance_gouvernement_provincial <- recode(PDP_2014_2$confiance_gouvernement_provincial, "98 = NA; 99 = NA")
+
+# Confiance (provincial - fédéral) (-10 = plus confiant envers le gouvernement fédéral ; 10 = plus confiant envers le gouvernement provincial) :
+PDP_2014_2$confiance_provincial_federal <- PDP_2014_2$confiance_gouvernement_provincial - PDP_2014_2$confiance_gouvernement_federal
+
+# Attachement (Canada) (0 = pas attaché du tout ; 10 = très attaché) :
+PDP_2014_2$attachement_canada <- recode(PDP_2014_2$attachement_canada, "98 = NA; 99 = NA")
+
+# Attachement (Québec) (0 = pas attaché du tout ; 10 = très attaché) :
+PDP_2014_2$attachement_province <- recode(PDP_2014_2$attachement_province, "98 = NA; 99 = NA")
+
+# Attachement (Québec - Canada) (-10 = plus attaché au Canada ; 10 = plus attaché au Québec) :
+PDP_2014_2$attachement_quebec_canada <- PDP_2014_2$attachement_province - PDP_2014_2$attachement_canada
+
+# Identité (Québec) (1 = Canadien seulement ; 5 = Québécois seulement) :
+PDP_2014_2$identite <- recode(PDP_2014_2$identite, "1 = 0; 2 = 0; 3 = 0; 4 = 1; 5 = 1; 8 = NA; 9 = NA")
+
+# Appui indépendance (0 = opposé à l'indépendance du Québec ; 1 = en faveur de l'indépendance du Québec) :
+PDP_2014_2$independance <- recode(PDP_2014_2$independance, "1 = 1; 2 = 1; 3 = 0; 4 = 0; 8 = NA; 9 = NA")
+
+# Proche PLQ (0 = non ; 1 = oui) :
+PDP_2014_2$proche_provincial <- recode(PDP_2014_2$proche_provincial, "98 = NA; 99 = NA")
+PDP_2014_2$proche_PLQ <- if_else(PDP_2014_2$proche_provincial == 2, 1, 0)
+
+# Proche PLC (0 = non ; 1 = oui) :
+PDP_2014_2$proche_federal <- recode(PDP_2014_2$proche_federal, "98 = NA; 99 = NA")
+PDP_2014_2$proche_PLC <- if_else(PDP_2014_2$proche_federal == 3, 1, 0)
+```
+
+### iii. Participation politique :
+```{r}
+# Vote (provincial) (0 = non ; 1 = oui) :
+PDP_2014_2$vote_provincial <- recode(PDP_2014_2$vote_provincial, "3 = NA; 8 = NA; 9 = NA")
+PDP_2014_2$vote_provincial <- if_else(PDP_2014_2$vote_provincial == 1, 1, 0)
+
+# Vote (fédéral) (0 = non ; 1 = oui) :
+PDP_2014_2$vote_federal <- recode(PDP_2014_2$vote_federal, "3 = NA; 8 = NA; 9 = NA")
+PDP_2014_2$vote_federal <- if_else(PDP_2014_2$vote_federal == 1, 1, 0)
+
+# Contact élu (0 = non ; 1 = oui) :
+PDP_2014_2$contact_elu <- recode(PDP_2014_2$contact_elu, "2 = 0; 8 = NA; 9 = NA")
+
+# Manifestation (0 = non ; 1 = oui) :
+PDP_2014_2$manifestation <- recode(PDP_2014_2$manifestation, "2 = 0; 8 = NA; 9 = NA")
+
+# Pétititon (0 = non ; 1 = oui) :
+PDP_2014_2$petition <- recode(PDP_2014_2$petition, "2 = 0; 8 = NA; 9 = NA")
+
+# Boycottage (0 = non ; 1 = oui) :
+PDP_2014_2$boycottage <- recode(PDP_2014_2$boycottage, "2 = 0; 8 = NA; 9 = NA")
+```
+
+### v. Langue :
+```{r}
+# Langue maison français (0 = non ; 1 = oui) :
+PDP_2014_2$langue_maison <- recode(PDP_2014_2$langue_maison, "98 = NA; 99 = NA")
+PDP_2014_2$langue_maison_francais <- if_else(PDP_2014_2$langue_maison == 2, 1, 0)
+
+# Langue maison anglais (0 = non ; 1 = oui) :
+PDP_2014_2$langue_maison_anglais <- if_else(PDP_2014_2$langue_maison == 1, 1, 0)
+
+# Langue travail français (0 = non ; 1 = oui) :
+PDP_2014_2$langue_travail <- recode(PDP_2014_2$langue_travail, "8 = NA; 9 = NA")
+PDP_2014_2$langue_travail_francais <- if_else(PDP_2014_2$langue_travail == 2, 1, 0)
+
+# Langue travail anglais (0 = non ; 1 = oui) :
+PDP_2014_2$langue_travail_anglais <- if_else(PDP_2014_2$langue_travail == 1, 1, 0)
+
+# Langue amis français (0 = non ; 1 = oui) :
+PDP_2014_2$langue_amis <- recode(PDP_2014_2$langue_amis, "8 = NA; 9 = NA")
+PDP_2014_2$langue_amis_francais <- if_else(PDP_2014_2$langue_amis == 2, 1, 0)
+
+# Langue amis anglais (0 = non ; 1 = oui) :
+PDP_2014_2$langue_amis_anglais <- if_else(PDP_2014_2$langue_amis == 1, 1, 0)
+
+# Langue contextes français (0 = aucun contexte ; 3 = tous les contextes) :
+PDP_2014_2$langue_contextes_francais = PDP_2014_2$langue_maison_francais + PDP_2014_2$langue_travail_francais + PDP_2014_2$langue_amis_francais
+
+# Langue contextes anglais (0 = aucun contexte ; 3 = tous les contextes) :
+PDP_2014_2$langue_contextes_anglais = PDP_2014_2$langue_maison_anglais + PDP_2014_2$langue_travail_anglais + PDP_2014_2$langue_amis_anglais
+
+# Langue maternelle francais (0 = non ; 1 = oui) :
+PDP_2014_2$langue_maternelle <- recode(PDP_2014_2$langue_maternelle, "99 = NA")
+PDP_2014_2$langue_maternelle_francais <- if_else(PDP_2014_2$langue_maternelle == 2, 1, 0)
+
+# Langue maternelle anglais (0 = non ; 1 = oui) :
+PDP_2014_2$langue_maternelle_anglais <- if_else(PDP_2014_2$langue_maternelle == 1, 1, 0)
+
+# Langue sondage francais (0 = non ; 1 = oui) :
+PDP_2014_2$langue_sondage_francais <- if_else(PDP_2014_2$langue_sondage == "FR", 1, 0)
+
+# Langue sondage anglais (0 = non ; 1 = oui) :
+PDP_2014_2$langue_sondage_anglais <- if_else(PDP_2014_2$langue_sondage == "EN", 1, 0)
+```
+
+### vi. Religion :
+```{r}
+# Athéisme (0 = non ; 1 = oui) :
+PDP_2014_2$atheisme <- if_else(PDP_2014_2$religion == 23, 1, 0)
+
+# Islam (0 = non ; 1 = oui) :
+PDP_2014_2$religion <- recode(PDP_2014_2$religion, "24 = NA")
+PDP_2014_2$islam <- if_else(PDP_2014_2$religion == 11, 1, 0)
+
+# Importance religion (1 = pas important ; 4 = très important) :
+PDP_2014_2$importance_religion <- recode(PDP_2014_2$importance_religion, "1 = 4; 2 = 3; 3 = 2; 4 = 1; 8 = NA; 9 = NA")
+```
+
+### vii. Statut d'immigrant :
+```{r}
+# Minorité visible (0 = non ; 1 = oui)
+PDP_2014_2$minorite_visible <- recode(PDP_2014_2$origine, "'01' = 0; '12' = 0; '02' = 1; '03' = 1; '04' = 1; '05' = 1; '06' = 1; '07' = 1; '08' = 1; '09' = 1; '10' = 1; '11' = 1; '96' = NA; '98' = NA; '99' = NA") 
+
+# Minorité visible première génération (0 = non ; 1 = oui) :
+PDP_2014_2$statut_immigration <- recode(PDP_2014_2$statut_immigration, "96 = NA; 97 = NA")
+PDP_2014_2$minorite_visible_premiere_generation <- if_else((PDP_2014_2$statut_immigration != 1) & (PDP_2014_2$minorite_visible == 1), 1, 0) 
+
+# Minorité visible deuxième génération (0 = non ; 1 = oui) :
+PDP_2014_2$minorite_visible_deuxieme_generation <- if_else((PDP_2014_2$statut_immigration == 1) & (PDP_2014_2$minorite_visible == 1), 1, 0) 
+
+# Années Canada (pourcentage) :
+PDP_2014_2$annees_canada <- recode(PDP_2014_2$annees_canada, "98 = NA; 99 = NA")
+PDP_2014_2$age <- recode(PDP_2014_2$groupe_age, "1 = 1939; 2 = 1940; 3 = 1945; 4 = 1950; 5 = 1955; 6 = 1960; 7 = 1965; 8 = 1970; 9 = 1975; 10 = 1980; 11 = 1985; 12 = 1990")
+PDP_2014_2$age <- 2014 - PDP_2014_2$age
+PDP_2014_2$annees_canada <- ifelse(is.na(PDP_2014_2$annees_canada), PDP_2014_2$age, PDP_2014_2$annees_canada)
+PDP_2014_2$annees_canada <- (PDP_2014_2$annees_canada/PDP_2014_2$age)*100
+```
+
+### viii. Caractéristiques sociodémographiques :
+```{r}
+# Québec (0 = non ; 1 = oui) :
+PDP_2014_2$quebec <- if_else(PDP_2014_2$province == 5, 1, 0)
+
+# Femme (0 = non ; 1 = oui) :
+PDP_2014_2$femme <- if_else(PDP_2014_2$genre == 2, 1, 0)
+
+# Université (0 = non ; 1 = oui) :
+PDP_2014_2$education <- recode(PDP_2014_2$education, "99 = NA") 
+PDP_2014_2$universite <- if_else(PDP_2014_2$education >= 7, 1, 0)
+
+# Revenu (1 = aucun revenu ; 2 = 1 000$ à 30 000$ ; 3 = 30 001 $ à 60 000$ ; 4 = 60 001 $ à 90 000 $ ; 5 = 90 001 $ à 110 000$ ; 6 = 110 001$ à 150 000$ ; 7 = 150 001$ à 200 000$ ; 8 = 200 000$ et plus) :
+PDP_2014_2$revenu <- recode(PDP_2014_2$revenu, "1 = 2; 2 = 2; 3 = 3; 4 = 3; 5 = 3; 6 = 4; 7 = 4; 8 = 4; 9 = 5; 10 = 5; 11 = 6; 12 = 6; 13 = 7; 14 = 8; 98 = NA; 99 = NA")
+
+# Agglomération Montréal (0 = non ; 1 = oui) :
+PDP_2014_2$agglomeration_montreal <- if_else(PDP_2014_2$code_postal == "H", 1, 0)
+```
+
+### ix. Autres :
+```{r}
+# Efficacité interne (provincial) (1 = peu d'efficacité externe; 4 = beaucoup d'efficacité externe) :
+PDP_2014_2$efficacite_interne_provincial <- recode(PDP_2014_2$efficacite_interne_provincial, "8 = NA; 9 = NA")
+
+# Efficacité interne (fédéral) (1 = peu d'efficacité externe ; 4 = beaucoup d'efficacité externe) :
+PDP_2014_2$efficacite_interne_federal <- recode(PDP_2014_2$efficacite_interne_federal, "8 = NA; 9 = NA")
+
+# Efficacité externe (provincial) (1 = peu d'efficacité externe ; 4 = beaucoup d'efficacité externe) :
+PDP_2014_2$efficacite_interne_provincial <- recode(PDP_2014_2$efficacite_interne_provincial, "8 = NA; 9 = NA")
+
+# Efficacité externe fédéral (1 = peu d'efficacité externe ; 4 = beaucoup d'efficacité externe) :
+PDP_2014_2$efficacite_externe_federal <- recode(PDP_2014_2$efficacite_externe_federal, "8 = NA; 9 = NA")
+
+# Discrimination (0 = dans aucun contexte, 5 = dans cinq contextes différents) :
+PDP_2014_2$discrimination_proprietaires <- recode(PDP_2014_2$discrimination_proprietaires, "1 = 0; 2 = 1; 3 = 1; 7 = NA; 8 = NA")
+PDP_2014_2$discrimination_employeurs <- recode(PDP_2014_2$discrimination_employeurs, "1 = 0; 2 = 1; 3 = 1; 7 = NA; 8 = NA")
+PDP_2014_2$discrimination_employes_gouvernement <- recode(PDP_2014_2$discrimination_employes_gouvernement, "1 = 0; 2 = 1; 3 = 1; 7 = NA; 8 = NA")
+PDP_2014_2$discrimination_voisins <- recode(PDP_2014_2$discrimination_voisins, "1 = 0; 2 = 1; 3 = 1; 7 = NA; 8 = NA")
+PDP_2014_2$discrimination_police <- recode(PDP_2014_2$discrimination_police, "1 = 0; 2 = 1; 3 = 1; 7 = NA; 8 = NA")
+PDP_2014_2$discrimination_contextes <- PDP_2014_2$discrimination_proprietaires + PDP_2014_2$discrimination_employeurs + PDP_2014_2$discrimination_employes_gouvernement + PDP_2014_2$discrimination_voisins + PDP_2014_2$discrimination_police 
+
+# Charte des valeurs (0 = contre, 1 = pour)
+PDP_2014_2$charte_des_valeurs <- recode(PDP_2014_2$charte_des_valeurs, "1 = 1; 2 = 0; 8 = NA; 9 = NA")
+```
+
+# 4. Création des sous-ensembles et sauvegarde des données transformées :
+
+## a) Québécois :
+```{r}
+PDP_2014_Q <- subset(PDP_2014_2, quebec == 1) 
+save(PDP_2014_Q, file = "PDP_2014_Q.RData")
+```
+
+## b) Québécois qui sont issus d'une minorité visible :
+```{r}
+PDP_2014_QI <- subset(PDP_2014_Q, minorite_visible == 1) 
+save(PDP_2014_QI, file = "PDP_2014_QI.RData") 
+
+# Première génération seulement :
+PDP_2014_QI1 <- subset(PDP_2014_QI, minorite_visible_premiere_generation == 1) 
+save(PDP_2014_QI1, file = "PDP_2014_QI1.RData") 
+
+# Deuxième génération seulement :
+PDP_2014_QI2 <- subset(PDP_2014_QI, minorite_visible_deuxieme_generation == 1)
+save(PDP_2014_QI2, file = "PDP_2014_QI2.RData") 
+```
+
+## c) Québécois francophones qui ne sont pas issus d'une minorité visible) :
+```{r}
+PDP_2014_QF <- subset(PDP_2014_Q, langue_sondage_francais == 1 & minorite_visible == 0) 
+save(PDP_2014_QF, file = "PDP_2014_QF.RData")
+```
+
+## d) Québécois anglophones qui ne sont pas issus d'une minorité visible) :
+```{r}
+PDP_2014_QA <- subset(PDP_2014_Q, langue_sondage_anglais == 1 & minorite_visible != 1) 
+save(PDP_2014_QA, file = "PDP_2014_QA.RData")
+```
+
